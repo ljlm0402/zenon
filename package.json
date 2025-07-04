@@ -1,0 +1,45 @@
+{
+  "name": "zenon",
+  "version": "0.0.0",
+  "description": "A minimalist Zustand-inspired state manager for Vue 3",
+  "author": "AGUMON <ljlm0402@gmail.com>",
+  "license": "MIT",
+  "keywords": [
+    "vue",
+    "state",
+    "zustand",
+    "composition-api",
+    "zenon",
+    "store",
+    "minimal"
+  ],
+  "main": "dist/zenon.cjs.js",
+  "module": "dist/zenon.es.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/zenon.es.js",
+      "require": "./dist/zenon.cjs.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsup src/createStore.ts --format cjs,esm --dts",
+    "prepare": "pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "tsup": "^7.3.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vue": "^3.4.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.2.0"
+  }
+}
