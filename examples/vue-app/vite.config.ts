@@ -6,8 +6,10 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      zenon: path.resolve(__dirname, "../../src/createStore.ts"), // 라이브러리 직접 참조
       "@": path.resolve(__dirname, "./src"),
+      zenon: path.resolve(__dirname, "../../src"),
+      "zenon/plugins": path.resolve(__dirname, "../../src/plugins"),
+      "zenon/utils/compose": path.resolve(__dirname, "../../src/utils/compose"),
     },
   },
   server: {
