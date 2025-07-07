@@ -1,23 +1,67 @@
-<p align="center">
-  <img width="800" src="https://github.com/ljlm0402/zenon/raw/images/logo.png" alt="zenon logo" />
+<h1 align="center">
+  <br>
+  <img src="https://github.com/ljlm0402/zenon/raw/images/logo.png" alt="Project Logo" width="800" />
+  <br>
+  <br>
+  zenon
+  <br>
+</h1>
+
+<h4 align="center">🦉 A minimalist, Zustand-inspired state manager for <b>Vue 3</b></h4>
+
+<p align ="center">
+    <a href="https://nodei.co/npm/zenon" target="_blank">
+    <img src="https://nodei.co/npm/zenon.png" alt="npm Info" />
+</a>
+
 </p>
 
-<h1 align="center">Zenon</h1>
-<p align="center">A minimalist, Zustand-inspired state manager for <b>Vue 3</b></p>
+<p align="center">
+    <a href="http://npm.im/zenon" target="_blank">
+      <img src="https://img.shields.io/npm/v/zenon.svg" alt="npm Version" />
+    </a>
+    <a href="http://npm.im/zenon" target="_blank">
+      <img src="https://img.shields.io/github/v/release/ljlm0402/zenon" alt="npm Release Version" />
+    </a>
+    <a href="http://npm.im/zenon" target="_blank">
+      <img src="https://img.shields.io/npm/dm/zenon.svg" alt="npm Downloads" />
+    </a>
+    <a href="http://npm.im/zenon" target="_blank">
+      <img src="https://img.shields.io/npm/l/zenon.svg" alt="npm Package License" />
+    </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/ljlm0402/zenon/stargazers" target="_blank">
+    <img src="https://img.shields.io/github/stars/ljlm0402/zenon" alt="github Stars" />
+  </a>
+  <a href="https://github.com/ljlm0402/zenon/network/members" target="_blank">
+    <img src="https://img.shields.io/github/forks/ljlm0402/zenon" alt="github Forks" />
+  </a>
+  <a href="https://github.com/ljlm0402/zenon/stargazers" target="_blank">
+    <img src="https://img.shields.io/github/contributors/ljlm0402/zenon" alt="github Contributors" />
+  </a>
+  <a href="https://github.com/ljlm0402/zenon/issues" target="_blank">
+    <img src="https://img.shields.io/github/issues/ljlm0402/zenon" alt="github Issues" />
+  </a>
+</p>
 
 ---
 
 ## ✨ Features
 
-- 🍃 <b>Vue 3</b> Composition API 전용
-- ⚡️ <b>Zustand와 거의 동일한 DX</b>: set/get/selector 모두 지원
-- 🧑‍💻 <b>TypeScript 친화적</b>: 타입 추론/분리/액션 모두 쉬움
-- 🚀 <b>초경량 & 심플</b>: 1-file store, 러닝커브 ZERO
-- 🧩 <b>부분구독(Selector)</b> 지원, 컴포넌트별 최적화 OK
+- 🍃 <b>Vue 3</b> Composition API only
 
----
+- ⚡️ <b>Almost identical DX to Zustand</b>: supports set/get/selector
 
-## 📦 설치
+- 🧑‍💻 <b>TypeScript friendly</b>: easy type inference, separation, and actions
+
+- 🚀 <b>Lightweight & simple</b>: true 1-file store, ZERO learning curve
+
+- 🧩 <b>Selector-based partial subscription</b> supported for optimal component performance
+
+
+## 💾 Installation
 
 ```bash
 pnpm add zenon
@@ -27,9 +71,7 @@ npm install zenon
 yarn add zenon
 ```
 
----
-
-## ⚡️ 기본 사용법
+## 📝 Usage
 
 ```ts
 // stores/counter.ts
@@ -49,9 +91,7 @@ export const useCounter = () =>
   }));
 ```
 
----
-
-## 🎯 컴포넌트에서 사용
+## 🎯 Comoponents Usage
 
 ```vue
 <template>
@@ -71,19 +111,15 @@ const { increase, reset } = store;
 </script>
 ```
 
----
-
-## 🚦 Selector로 부분 구독
+## 🚦 Partial Subscription with Selector
 
 ```ts
 const store = useCounter();
-const count = store.useSelector((s) => s.count); // count만 반응
-const double = store.useSelector((s) => s.count * 2); // 파생값도 OK
+const count = store.useSelector((s) => s.count); // Subscribe only to count
+const double = store.useSelector((s) => s.count * 2); // Derived value is also OK
 ```
 
----
-
-## 🧑‍💻 타입 분리 예시
+## 🧑‍💻 Type Separation Example
 
 ```ts
 type UserState = { name: string; age: number };
@@ -91,20 +127,17 @@ type UserActions = { setName: (name: string) => void };
 
 export const useUser = () =>
   createStore<UserState & UserActions>((set, get) => ({
-    name: "아구몬",
+    name: "Agumon",
     age: 32,
     setName: (name) => set({ name }),
   }));
 ```
 
----
-
 ## 📚 License
 
 MIT
 
----
 
 ## ⭐️ Star & Contribute
 
-아이디어, PR, 피드백 모두 환영합니다!
+Ideas, PRs, and feedback are all welcome!
