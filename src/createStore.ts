@@ -1,3 +1,13 @@
+/*****************************************************************
+ * ZENON - Minimal Zustand-like State Manager for Vue 3
+ * (c) 2025-present AGUMON (https://github.com/ljlm0402/zenon)
+ *
+ * This source code is licensed under the MIT license.
+ * See the LICENSE file in the project root for more information.
+ *
+ * Made with ❤️ by AGUMON 🦖
+ *****************************************************************/
+
 import { reactive, computed, type ComputedRef } from "vue";
 
 export type StoreApi<T> = {
