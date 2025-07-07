@@ -50,16 +50,13 @@
 
 ## ✨ Features
 
-- 🍃 <b>Vue 3</b> Composition API only
-
-- ⚡️ <b>Almost identical DX to Zustand</b>: supports set/get/selector
-
-- 🧑‍💻 <b>TypeScript friendly</b>: easy type inference, separation, and actions
-
-- 🚀 <b>Lightweight & simple</b>: true 1-file store, ZERO learning curve
-
-- 🧩 <b>Selector-based partial subscription</b> supported for optimal component performance
-
+- 🍃 **Vue 3** Composition API only
+- ⚡️ **Almost identical DX to Zustand**: supports set/get/selector, middleware composition
+- 🧑‍💻 **TypeScript friendly**: easy type inference, separation, and actions
+- 🚀 **Lightweight & simple**: true 1-file store, ZERO learning curve
+- 🧩 **Selector-based partial subscription** supported for optimal component performance
+- 🧩 **Pluggable middleware support** (Logger, Persist, ... with compose or chain)
+- 🗂 **Full npm-style import/usage** (`import ... from "zenon"`, `"zenon/plugins"`, etc.)
 
 ## 💾 Installation
 
@@ -71,24 +68,35 @@ npm install zenon
 yarn add zenon
 ```
 
-## 📝 Usage
+## 📝 Usage Example
 
 ```ts
 // stores/counter.ts
-import { createStore } from "zenon";
+import { createStore, compose } from "zenon";
+import { withLogger, withPersist } from "zenon/plugins";
 
-type State = { count: number };
-type Actions = {
+type CounterState = { count: number };
+type CounterActions = {
   increase: () => void;
   reset: () => void;
 };
 
+const STORE_KEY = "zenon-counter";
+
+// Compose DX
 export const useCounter = () =>
-  createStore<State & Actions>((set, get) => ({
-    count: 0,
-    increase: () => set({ count: get().count + 1 }),
-    reset: () => set({ count: 0 }),
-  }));
+  createStore(
+    compose(
+      withLogger({ store: "counter", timestamp: true, expanded: true }),
+      withPersist<CounterState & CounterActions>(STORE_KEY, {
+        storage: window.sessionStorage,
+      })
+    )((set, get) => ({
+      count: 0,
+      increase: () => set({ count: get().count + 1 }, "increase"),
+      reset: () => set({ count: 0 }, "reset"),
+    }))
+  );
 ```
 
 ## 🎯 Comoponents Usage
@@ -111,6 +119,42 @@ const { increase, reset } = store;
 </script>
 ```
 
+## 🧩 Middleware (Logger, Persist)
+
+- Compose or chain multiple plugins
+
+- Plugin entry: zenon/plugins
+
+```ts
+import { createStore, compose } from "zenon";
+import { withLogger, withPersist } from "zenon/plugins";
+
+// Compose style
+export const useCounter = () =>
+  createStore(
+    compose(
+      withLogger({ store: "counter" }),
+      withPersist("counter")
+    )((set, get) => ({
+      count: 0,
+      increase: () => set({ count: get().count + 1 }, "increase"),
+      reset: () => set({ count: 0 }, "reset"),
+    }))
+  );
+
+// Or chain style
+export const useCounter = () =>
+  createStore(
+    withLogger({ store: "counter" })(
+      withPersist("counter")((set, get) => ({
+        count: 0,
+        increase: () => set({ count: get().count + 1 }, "increase"),
+        reset: () => set({ count: 0 }, "reset"),
+      }))
+    )
+  );
+```
+
 ## 🚦 Partial Subscription with Selector
 
 ```ts
@@ -119,24 +163,9 @@ const count = store.useSelector((s) => s.count); // Subscribe only to count
 const double = store.useSelector((s) => s.count * 2); // Derived value is also OK
 ```
 
-## 🧑‍💻 Type Separation Example
-
-```ts
-type UserState = { name: string; age: number };
-type UserActions = { setName: (name: string) => void };
-
-export const useUser = () =>
-  createStore<UserState & UserActions>((set, get) => ({
-    name: "Agumon",
-    age: 32,
-    setName: (name) => set({ name }),
-  }));
-```
-
 ## 📚 License
 
 MIT
-
 
 ## ⭐️ Star & Contribute
 
