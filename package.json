@@ -1,6 +1,6 @@
 {
   "name": "zenon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A minimalist Zustand-inspired state manager for Vue 3",
   "author": "AGUMON <ljlm0402@gmail.com>",
   "license": "MIT",
@@ -21,6 +21,16 @@
       "import": "./dist/zenon.es.js",
       "require": "./dist/zenon.cjs.js",
       "types": "./dist/index.d.ts"
+    },
+    "./plugins": {
+      "import": "./dist/plugins/index.js",
+      "require": "./dist/plugins/index.js",
+      "types": "./dist/plugins/index.d.ts"
+    },
+    "./utils/compose": {
+      "import": "./dist/utils/compose.js",
+      "require": "./dist/utils/compose.js",
+      "types": "./dist/utils/compose.d.ts"
     }
   },
   "files": [
@@ -28,7 +38,7 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "tsup src/createStore.ts --format cjs,esm --dts",
+    "build": "tsup --config tsup.config.ts",
     "prepare": "pnpm build"
   },
   "devDependencies": {
@@ -41,5 +51,16 @@
   },
   "peerDependencies": {
     "vue": "^3.2.0"
-  }
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ljlm0402/zenon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ljlm0402/zenon/issues"
+  },
+  "homepage": "https://github.com/ljlm0402/zenon#readme"
 }

@@ -12,7 +12,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "zenon": ["../../src"] // zenon을 직접 참조할 경우
+      "zenon": ["../../src"],
+      "zenon/plugins": ["../../src/plugins"],
+      "zenon/utils/compose": ["../../src/utils/compose"]
     },
     "types": ["vite/client"]
   },
