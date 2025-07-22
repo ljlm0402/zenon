@@ -1,0 +1,35 @@
+name: "\U00002753 Q&A"
+description: Ask a question or request clarification.
+title: "[Q&A] "
+labels: [question]
+assignees: "ljlm0402"
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Please describe your question or what you need help with.
+      placeholder: ex) How can I customize the login page UI?
+    validations:
+      required: true
+  - type: textarea
+    id: attempts
+    attributes:
+      label: What have you tried?
+      description: Describe any attempts, research, or steps you've already taken to solve the issue.
+      placeholder: ex) I checked the documentation and tried modifying `login.scss`, but it had no effect.
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: What kind of answer would be helpful?
+      description: Let us know what kind of information or solution you are looking for.
+      placeholder: ex) Sample code or documentation reference would be helpful.
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other details, screenshots, or references that may help.
