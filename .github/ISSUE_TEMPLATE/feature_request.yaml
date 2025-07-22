@@ -1,0 +1,35 @@
+name: "\U0001F4A1 Feature Request"
+description: Suggest a new feature or improvement.
+title: "[Feature] "
+labels: [enhancement]
+assignees: "ljlm0402"
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Briefly describe the feature or improvement.
+      placeholder: ex) Add notification feature for users
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: Details
+      description: Describe the feature or improvement in detail.
+      placeholder: ex) Send email notifications when users log in successfully.
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason / Benefit
+      description: Why is this needed? What benefits are expected?
+      placeholder: ex) Reduce churn by notifying users of key events.
+    validations:
+      required: false
+  - type: textarea
+    id: etc
+    attributes:
+      label: Additional Context
+      description: Any references, links, or related screenshots.

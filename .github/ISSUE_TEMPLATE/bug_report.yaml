@@ -1,0 +1,52 @@
+name: "\U0001F41B Bug Report"
+description: Report a bug or unexpected behavior.
+title: "[Bug] "
+labels: [bug]
+assignees: "ljlm0402"
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Description
+      description: Please describe the bug in detail.
+      placeholder: ex) The app crashes when clicking the button.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: List the steps to reproduce the bug.
+      placeholder: |
+        1. Open the app
+        2. Click the X button
+        3. See the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: ex) The screen should change normally.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Logs
+      description: Attach screenshots or logs if available.
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: "OS, browser, version, etc. (ex: Windows 11, Chrome 124)"
+    validations:
+      required: false
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched for existing issues.
+        - label: I have checked the relevant documentation.
