@@ -1,3 +1,5 @@
+import type { SetFunction, GetFunction, ActionName } from "../createStore";
+
 function pickValuesOnly<T extends Record<string, any>>(obj: T) {
   const result: Record<string, any> = {};
   for (const key in obj) {
@@ -19,18 +21,9 @@ export function withLogger<T extends Record<string, any>>(
     expanded?: boolean;
   } = {}
 ) {
-  return (
-      initializer: (
-        set: (updater: Partial<T>, actionName?: string) => void,
-        get: () => T
-      ) => T
-    ) =>
-    (
-      set: (updater: Partial<T>, actionName?: string) => void,
-      get: () => T
-    ): T => {
-      const loggerSet = (updater: Partial<T>, actionName?: string) => {
-        if (!actionName) return set(updater); // system action은 로그 생략
+  return (initializer: (set: SetFunction<T>, get: GetFunction<T>) => T) =>
+    (set: SetFunction<T>, get: GetFunction<T>): T => {
+      const loggerSet: SetFunction<T> = (updater, actionName) => {
         const prevState = pickValuesOnly({ ...get() });
         set(updater, actionName);
         const nextState = pickValuesOnly(get());

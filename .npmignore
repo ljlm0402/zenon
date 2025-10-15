@@ -1,40 +1,35 @@
-# 소스 및 개발 관련 파일/폴더 제외
+# Development files
 src/
 examples/
-test/
-tests/
-__tests__/
+node_modules/
 coverage/
 .vscode/
 .idea/
-node_modules/
-dist/*.map
 
-# 프로젝트 루트의 설정/메타 파일
+# Test files
+**/__tests__/
+**/*.spec.ts
+**/*.spec.js
+**/*.test.ts
+**/*.test.js
+vitest.config.ts
+vitest.config.js
+
+# Build tools
+tsup.config.ts
+vite.config.ts
+
+# Documentation (except main README)
+IMPROVEMENTS.md
+VALIDATION_REPORT.md
+.github/
+
+# Misc
 *.log
 *.tsbuildinfo
-*.env*
-*.DS_Store
-*.swp
-
-# 빌드/테스트/도구 관련
-*.spec.ts
-*.spec.js
-*.test.ts
-*.test.js
-jest.config.*
-vitest.config.*
-coverage/
-playground/
-scripts/
-temp/
-docs/
-assets/
-.github/
-.editorconfig
-
-# macOS, Windows, 기타 불필요 파일
-Thumbs.db
-npm-debug.log
-yarn.lock
+.DS_Store
+.env*
+!.env.example
 pnpm-lock.yaml
+yarn.lock
+*.map

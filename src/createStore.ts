@@ -10,27 +10,107 @@
 
 import { reactive, computed, type ComputedRef } from "vue";
 
+export type ActionName = string;
+
+export type SetFunction<T> = (
+  updater: Partial<T>,
+  actionName: ActionName
+) => void;
+
+export type SetSilentFunction<T> = (updater: Partial<T>) => void;
+
+export type GetFunction<T> = () => T;
+
+export type Listener<T> = (state: T, prevState: T) => void;
+
+export type Unsubscribe = () => void;
+
 export type StoreApi<T> = {
-  get: () => T;
-  set: (updater: Partial<T>, actionName?: string) => void;
+  get: GetFunction<T>;
+  set: SetFunction<T>;
+  setSilent: SetSilentFunction<T>;
   useSelector: <S>(selector: (state: T) => S) => ComputedRef<S>;
+  subscribe: (listener: Listener<T>) => Unsubscribe;
+  getListeners: () => Set<Listener<T>>;
 };
 
+export type StoreInitializer<T> = (
+  set: SetFunction<T>,
+  get: GetFunction<T>,
+  api: Pick<StoreApi<T>, "setSilent" | "subscribe">
+) => T;
+
 export function createStore<T extends Record<string, any>>(
-  initializer: (set: StoreApi<T>["set"], get: StoreApi<T>["get"]) => T
-): T & Pick<StoreApi<T>, "useSelector"> {
+  initializer: StoreInitializer<T>
+): T & Pick<StoreApi<T>, "useSelector" | "subscribe"> {
   const state = reactive({}) as T;
+  const listeners = new Set<Listener<T>>();
 
-  const set: StoreApi<T>["set"] = (updater, _actionName) => {
-    Object.assign(state, updater);
+  const set: SetFunction<T> = (updater, actionName) => {
+    const prevState = { ...state };
+
+    try {
+      Object.assign(state, updater);
+    } catch (error) {
+      console.error(`[Zenon] Error in set for action "${actionName}":`, error);
+      // Rollback on error
+      Object.assign(state, prevState);
+      throw error;
+    }
+
+    // Notify listeners after successful update
+    listeners.forEach((listener) => {
+      try {
+        listener(state, prevState);
+      } catch (error) {
+        console.error(
+          `[Zenon] Error in listener for action "${actionName}":`,
+          error
+        );
+      }
+    });
   };
-  const get: StoreApi<T>["get"] = () => state;
-  const useSelector = <S>(selector: (state: T) => S) =>
-    computed(() => selector(state));
 
-  const initial = initializer(set, get);
+  const setSilent: SetSilentFunction<T> = (updater) => {
+    try {
+      Object.assign(state, updater);
+    } catch (error) {
+      console.error("[Zenon] Error in setSilent:", error);
+      throw error;
+    }
+  };
+
+  const get: GetFunction<T> = () => state;
+
+  const useSelector = <S>(selector: (state: T) => S) =>
+    computed(() => {
+      try {
+        return selector(state);
+      } catch (error) {
+        console.error("[Zenon] Error in selector:", error);
+        throw error;
+      }
+    });
+
+  const subscribe = (listener: Listener<T>): Unsubscribe => {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+
+  const getListeners = () => listeners;
+
+  const api: Pick<StoreApi<T>, "setSilent" | "subscribe"> = {
+    setSilent,
+    subscribe,
+  };
+
+  const initial = initializer(set, get, api);
   Object.assign(state, initial);
 
-  return Object.assign(state, { useSelector }) as T &
-    Pick<StoreApi<T>, "useSelector">;
+  return Object.assign(state, {
+    useSelector,
+    subscribe,
+  }) as T & Pick<StoreApi<T>, "useSelector" | "subscribe">;
 }
