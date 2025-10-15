@@ -2,21 +2,22 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "lib": ["ESNext", "DOM"],
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "moduleDetection": "force",
     "strict": true,
     "jsx": "preserve",
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "zenon": ["../../src"],
-      "zenon/plugins": ["../../src/plugins"],
-      "zenon/utils/compose": ["../../src/utils/compose"]
+      "@/*": ["./src/*"]
     },
     "types": ["vite/client"]
   },
-  "include": ["src", "src/main.ts", "env.d.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "env.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -7,7 +7,7 @@
   <br>
 </h1>
 
-<h4 align="center">🦉 A minimalist, Zustand-inspired state manager for <b>Vue 3</b></h4>
+<h4 align="center">🦉 Vue 3를 위한 심플하고 강력한 상태 관리 라이브러리</h4>
 
 <p align="center">
   <a href="https://nodei.co/npm/zenon" target="_blank">
@@ -46,36 +46,36 @@
 </p>
 
 <p align="center">
-  <strong>· English <a href="./README.ko.md">· Korean</a></strong>
+    <strong><a href="./README.md">English</a> · 한국어</strong>
 </p>
 
 ---
 
-## ✨ Features
+## ✨ 주요 기능
 
-- 🍃 **Vue 3 Composition API** - Modern reactive state management
-- ⚡️ **Zustand-like DX** - Familiar API with `set`, `get`, and selectors
-- 🧑‍💻 **Full TypeScript Support** - Complete type safety and inference
-- 🚀 **Lightweight** - Minimal bundle size, zero dependencies (except Vue)
-- 🎯 **Selector-based Subscriptions** - Optimize rendering with partial updates
-- 🔌 **Pluggable Middleware** - Logger, Persist, ErrorBoundary, and more
-- 🧩 **Composable** - Chain or compose multiple middlewares
-- 📦 **Tree-shakeable** - Import only what you need
-- ✅ **Production Ready** - Fully tested with 30+ test cases
+- ⚡️ **경량화** - 작은 번들 크기와 빠른 성능
+- 🔄 **반응형** - Vue 3의 반응형 시스템 기반
+- 🔌 **플러그 가능** - 미들웨어로 기능 확장 (Logger, Persist, ErrorBoundary)
+- 🎯 **부분 구독** - `useSelector`로 필요한 상태만 구독
+- 🛡️ **완전한 TypeScript 지원** - 100% 타입 안전성
+- 📦 **제로 의존성** - Vue 3 외 추가 의존성 없음
+- 🧩 **간단한 API** - Zustand에서 영감을 받은 직관적인 API
+- 🧪 **프로덕션 준비 완료** - 30개 이상의 테스트 케이스로 완벽 검증
+- 🎨 **Composition API 우선** - Vue 3의 모던 API 스타일
 
-## 💾 Installation
+## 📦 설치
 
 ```bash
-pnpm add zenon
-# or
 npm install zenon
+# or
+pnpm add zenon
 # or
 yarn add zenon
 ```
 
-## 📝 Quick Start
+## 📝 빠른 시작
 
-### Basic Usage
+### 기본 사용법
 
 ```ts
 // stores/counter.ts
@@ -94,10 +94,10 @@ export const useCounter = () =>
 <!-- Counter.vue -->
 <template>
   <div>
-    <h2>Count: {{ count }}</h2>
+    <h2>카운트: {{ count }}</h2>
     <button @click="increment">+1</button>
     <button @click="decrement">-1</button>
-    <button @click="reset">Reset</button>
+    <button @click="reset">초기화</button>
   </div>
 </template>
 
@@ -105,12 +105,12 @@ export const useCounter = () =>
 import { useCounter } from "./stores/counter";
 
 const store = useCounter();
-const count = store.useSelector((s) => s.count); // Partial subscription
+const count = store.useSelector((s) => s.count); // 부분 구독
 const { increment, decrement, reset } = store;
 </script>
 ```
 
-### With Middleware
+### 미들웨어 사용
 
 ```ts
 import { createStore, compose } from "zenon";
@@ -126,7 +126,7 @@ export const useCounter = () =>
       }),
       withErrorBoundary({
         onError: (error, actionName) => {
-          console.error(`Error in ${actionName}:`, error);
+          console.error(`${actionName}에서 에러 발생:`, error);
         },
       })
     )((set, get) => ({
@@ -137,66 +137,66 @@ export const useCounter = () =>
   );
 ```
 
-## 🧩 Middleware Plugins
+## 🧩 미들웨어 플러그인
 
-Zenon provides three powerful middleware plugins that can be composed together:
+Zenon은 함께 조합할 수 있는 3가지 강력한 미들웨어 플러그인을 제공합니다:
 
 ### withLogger
 
-Logs all state changes to the console with timestamps.
+모든 상태 변경을 타임스탬프와 함께 콘솔에 로깅합니다.
 
 ```ts
 import { withLogger } from "zenon/plugins";
 
 withLogger({
-  store: "counter", // Store name for logging
-  timestamp: true, // Include timestamps (default: false)
-  expanded: false, // Auto-expand logs (default: false)
+  store: "counter", // 로깅용 스토어 이름
+  timestamp: true, // 타임스탬프 포함 (기본값: false)
+  expanded: false, // 로그 자동 확장 (기본값: false)
 });
 ```
 
 ### withPersist
 
-Persists store state to localStorage or sessionStorage.
+스토어 상태를 localStorage 또는 sessionStorage에 영속화합니다.
 
 ```ts
 import { withPersist } from "zenon/plugins";
 
 withPersist("zenon-counter", {
-  storage: window.localStorage, // default: localStorage
-  version: 1, // Version for migration control
-  partialKeys: ["count"], // Persist only specific keys
-  serialize: JSON.stringify, // Custom serializer
-  deserialize: JSON.parse, // Custom deserializer
-  onError: (error) => console.error(error), // Error handler
-  merge: (persisted, current) => ({ ...current, ...persisted }), // Merge strategy
+  storage: window.localStorage, // 기본값: localStorage
+  version: 1, // 마이그레이션 제어를 위한 버전
+  partialKeys: ["count"], // 특정 키만 영속화
+  serialize: JSON.stringify, // 커스텀 직렬화
+  deserialize: JSON.parse, // 커스텀 역직렬화
+  onError: (error) => console.error(error), // 에러 핸들러
+  merge: (persisted, current) => ({ ...current, ...persisted }), // 병합 전략
 });
 ```
 
 ### withErrorBoundary
 
-Catches and handles errors in store actions.
+스토어 액션의 에러를 캐치하고 처리합니다.
 
 ```ts
 import { withErrorBoundary } from "zenon/plugins";
 
 withErrorBoundary({
   onError: (error, actionName) => {
-    // Handle error (e.g., send to error tracking service)
-    console.error(`Error in ${actionName}:`, error);
+    // 에러 처리 (예: 에러 추적 서비스로 전송)
+    console.error(`${actionName}에서 에러:`, error);
   },
-  preventRollback: false, // Prevent state rollback on error (default: false)
-  rethrow: false, // Rethrow error after handling (default: false)
+  preventRollback: false, // 에러 발생 시 상태 롤백 방지 (기본값: false)
+  rethrow: false, // 처리 후 에러 재발생 (기본값: false)
 });
 ```
 
-### Composing Multiple Plugins
+### 여러 플러그인 조합하기
 
 ```ts
 import { createStore, compose } from "zenon";
 import { withLogger, withPersist, withErrorBoundary } from "zenon/plugins";
 
-// Compose style (recommended)
+// Compose 스타일 (권장)
 export const useStore = () =>
   createStore(
     compose(
@@ -204,28 +204,28 @@ export const useStore = () =>
       withPersist("app-state"),
       withErrorBoundary({ onError: console.error })
     )((set, get) => ({
-      // Your store implementation
+      // 스토어 구현
     }))
   );
 
-// Or chain style
+// 또는 체인 스타일
 export const useStore = () =>
   createStore(
     withLogger({ store: "app" })(
       withPersist("app-state")(
         withErrorBoundary({ onError: console.error })((set, get) => ({
-          // Your store implementation
+          // 스토어 구현
         }))
       )
     )
   );
 ```
 
-## 📚 API Reference
+## 📚 API 레퍼런스
 
 ### createStore
 
-Creates a new store with reactive state management.
+반응형 상태 관리가 가능한 새 스토어를 생성합니다.
 
 ```ts
 function createStore<T>(
@@ -233,53 +233,53 @@ function createStore<T>(
 ): StoreApi<T>;
 ```
 
-**Returns:** `StoreApi<T>` with the following methods:
+**반환값:** 다음 메서드를 가진 `StoreApi<T>`:
 
-- `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - Subscribe to partial state
-- `subscribe(listener: Listener<T>): () => void` - Subscribe to all state changes
-- `setSilent(patch: Partial<T>)` - Update state without triggering subscribers
-- `getState(): T` - Get current state snapshot
-- Plus all store actions defined in your initializer
+- `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - 부분 상태 구독
+- `subscribe(listener: Listener<T>): () => void` - 모든 상태 변경 구독
+- `setSilent(patch: Partial<T>)` - 구독자 알림 없이 상태 업데이트
+- `getState(): T` - 현재 상태 스냅샷 가져오기
+- 초기화 함수에서 정의한 모든 스토어 액션
 
 ### useSelector
 
-Subscribe to a specific part of the store state. Only triggers re-renders when the selected value changes.
+스토어 상태의 특정 부분만 구독합니다. 선택된 값이 변경될 때만 재렌더링을 트리거합니다.
 
 ```ts
 const store = useCounter();
-const count = store.useSelector((s) => s.count); // Subscribe only to count
-const double = store.useSelector((s) => s.count * 2); // Derived values work too
+const count = store.useSelector((s) => s.count); // count만 구독
+const double = store.useSelector((s) => s.count * 2); // 파생 값도 가능
 ```
 
 ### subscribe
 
-Subscribe to all state changes with a callback function.
+콜백 함수로 모든 상태 변경을 구독합니다.
 
 ```ts
 const unsubscribe = store.subscribe((state, prevState) => {
-  console.log("State changed:", { state, prevState });
+  console.log("상태 변경됨:", { state, prevState });
 });
 
-// Cleanup
+// 정리
 unsubscribe();
 ```
 
 ### setSilent
 
-Update state without notifying subscribers. Useful for batch updates or internal state changes.
+구독자에게 알리지 않고 상태를 업데이트합니다. 배치 업데이트나 내부 상태 변경에 유용합니다.
 
 ```ts
-store.setSilent({ count: 10 }); // Updates state without triggering listeners
+store.setSilent({ count: 10 }); // 리스너 트리거 없이 상태 업데이트
 ```
 
-## � TypeScript Support
+## 🔷 TypeScript 지원
 
-Zenon is written in TypeScript and provides full type safety out of the box.
+Zenon은 TypeScript로 작성되었으며 완전한 타입 안정성을 기본 제공합니다.
 
 ```ts
 import { createStore, StoreApi, SetFunction, GetFunction } from "zenon";
 
-// Type your store
+// 스토어 타입 정의
 type CounterState = {
   count: number;
   increment: () => void;
@@ -294,33 +294,33 @@ export const useCounter = (): StoreApi<CounterState> =>
   }));
 ```
 
-**Exported Types:**
+**내보낸 타입들:**
 
-- `StoreApi<T>` - Store instance type
-- `SetFunction<T>` - State setter function type
-- `GetFunction<T>` - State getter function type
-- `Listener<T>` - Subscribe callback type
-- `StoreMiddleware<T>` - Middleware function type
+- `StoreApi<T>` - 스토어 인스턴스 타입
+- `SetFunction<T>` - 상태 설정 함수 타입
+- `GetFunction<T>` - 상태 가져오기 함수 타입
+- `Listener<T>` - 구독 콜백 타입
+- `StoreMiddleware<T>` - 미들웨어 함수 타입
 
-## 🧪 Testing
+## 🧪 테스팅
 
-Zenon is thoroughly tested with 30+ test cases covering all features:
+Zenon은 모든 기능을 커버하는 30개 이상의 테스트 케이스로 철저하게 테스트되었습니다:
 
-- ✅ Core store functionality (reactivity, subscriptions, selectors)
-- ✅ All middleware plugins (logger, persist, error boundary)
-- ✅ Error handling and edge cases
-- ✅ TypeScript type safety
+- ✅ 핵심 스토어 기능 (반응성, 구독, 선택자)
+- ✅ 모든 미들웨어 플러그인 (logger, persist, error boundary)
+- ✅ 에러 핸들링과 엣지 케이스
+- ✅ TypeScript 타입 안전성
 
-Run tests:
+테스트 실행:
 
 ```bash
 pnpm test
 ```
 
-## �📚 License
+## 📚 라이센스
 
 MIT
 
 ## ⭐️ Star & Contribute
 
-Ideas, PRs, and feedback are all welcome!
+아이디어, PR, 피드백 모두 환영합니다!

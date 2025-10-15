@@ -7,6 +7,7 @@ export default defineConfig({
     "src/plugins/index.ts",
     "src/plugins/withLogger.ts",
     "src/plugins/withPersist.ts",
+    "src/plugins/withErrorBoundary.ts",
     "src/utils/compose.ts",
   ],
   dts: true,
