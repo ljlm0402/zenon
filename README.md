@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <img src="https://github.com/ljlm0402/zenon/raw/images/logo.png" alt="Zenon Logo" width="800" />
+  <img src="https://github.com/ljlm0402/zenon/raw/images/logo.png" alt="Zenon Logo" width="600" />
   <br>
   <br>
   Zenon
@@ -272,7 +272,7 @@ Update state without notifying subscribers. Useful for batch updates or internal
 store.setSilent({ count: 10 }); // Updates state without triggering listeners
 ```
 
-## � TypeScript Support
+## 🏗 TypeScript Support
 
 Zenon is written in TypeScript and provides full type safety out of the box.
 
@@ -317,10 +317,16 @@ Run tests:
 pnpm test
 ```
 
-## �📚 License
+## 🤝 Contributing
 
-MIT
+Contributions are always welcome! Please feel free to open an issue or submit a pull request.
 
-## ⭐️ Star & Contribute
+## 💳 License
 
-Ideas, PRs, and feedback are all welcome!
+[MIT](LICENSE)
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/ljlm0402">AGUMON</a> 🦖
+</p>

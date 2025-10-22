@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-  <img src="https://github.com/ljlm0402/zenon/raw/images/logo.png" alt="Zenon Logo" width="800" />
+  <img src="https://github.com/ljlm0402/zenon/raw/images/logo.png" alt="Zenon Logo" width="600" />
   <br>
   <br>
   Zenon
@@ -317,10 +317,16 @@ Zenon은 모든 기능을 커버하는 30개 이상의 테스트 케이스로 �
 pnpm test
 ```
 
-## 📚 라이센스
+## 🤝 기여하기
 
-MIT
+기여는 언제나 환영합니다! 이슈를 열거나 풀 리퀘스트를 제출해 주세요.
 
-## ⭐️ Star & Contribute
+## 💳 라이선스
 
-아이디어, PR, 피드백 모두 환영합니다!
+[MIT](LICENSE)
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/ljlm0402">AGUMON</a> 🦖
+</p>
