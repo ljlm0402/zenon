@@ -20,13 +20,23 @@ jobs:
           node-version: 22
           registry-url: 'https://registry.npmjs.org/'
 
+      - name: Validate tag and choose npm channel
+        id: release
+        run: node scripts/release-tag.mjs
+
       - name: 📦 Install Dependencies
         run: npm ci --ignore-scripts
 
       - name: Validate release
         run: npm run check
 
-      - name: 🚀 Publish to npm
-        run: npm publish --access public
+      - name: Check packed consumer with minimum supported Vue
+        run: npm run test:package
         env:
+          ZENON_TEST_VUE_VERSION: 3.2.0
+
+      - name: 🚀 Publish to npm
+        run: npm publish --access public --tag "$NPM_DIST_TAG"
+        env:
+          NPM_DIST_TAG: ${{ steps.release.outputs.dist_tag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

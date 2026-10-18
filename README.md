@@ -364,3 +364,28 @@ Capture a `PersistController` with `onReady: controller => { persistence = contr
 - `retryPersist()` retries writing current memory, but never bypasses blocked hydration. It returns success/failure.
 
 Recovery calls made inside `onReady` or during another recovery return false. A failed migration/backup or detected concurrent storage change blocks automatic writes even with `onHydrationError: "overwrite"`. Repair the cause and call `rehydrate()`. An empty-store initial write failure or ordinary update failure can use `retryPersist()`.
+
+### Request- and component-scoped stores
+
+```ts
+import { createStore, createStoreContext } from "zenon";
+
+export const counterContext = createStoreContext((count: number) =>
+  createStore(() => ({ count })), "Counter"
+);
+
+// Per request: create a fresh SSR app, then register a fresh store.
+const store = counterContext.provideTo(app, initialCount);
+// In a parent's synchronous setup: counterContext.provideStore(initialCount)
+// In descendants' synchronous setup: counterContext.useStore()
+```
+
+The context holds a unique injection key and the factory, not a global store. Factory arguments and store types are inferred. The factory must synchronously return a fresh instance; returning a singleton defeats request isolation. A new SSR app is required per request.
+
+`provideStore` returns the new store for the provider component. `useStore` resolves the nearest ancestor/app provider, not a provider on the same component. Missing providers, use outside component setup, and duplicate registration on the same app/component throw actionable errors. Call component helpers before awaiting. Nested providers affect only their descendants; contexts with identical display names remain independent.
+
+This API does not serialize state into HTML or perform client hydration.
+
+## 2.0 upgrade notes
+
+Version 2.0 changes persistence failure defaults, handled action return types, and the middleware composition contract. Review the [release and migration notes (Korean)](./docs/RELEASE_NOTES.ko.md) before upgrading. The [release plan (Korean)](./docs/RELEASE_PLAN.ko.md) records publication status and validation limits.

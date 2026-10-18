@@ -19,5 +19,9 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run check
+      - name: Check packed consumer with minimum supported Vue
+        run: npm run test:package
+        env:
+          ZENON_TEST_VUE_VERSION: 3.2.0
       - run: npx tsc --noEmit -p examples/vue-app/tsconfig.json
       - run: npx vite build --config examples/vue-app/vite.config.ts examples/vue-app
