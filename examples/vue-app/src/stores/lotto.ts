@@ -16,9 +16,9 @@ const getRandomLottoNumbers = (): number[] => {
 }
 
 // Compose DX
-export const withAppPreset = compose(
-  withLogger({ store: "lotto", timestamp: true, expanded: true }),
-  withPersist("lotto", { storage: window.sessionStorage })
+export const withAppPreset = compose<LottoState & LottoActions>(
+  withLogger<LottoState & LottoActions>({ store: "lotto", timestamp: true, expanded: true }),
+  withPersist<LottoState & LottoActions>("lotto", { storage: window.sessionStorage })
 );
 
 export const useLotto = () =>
