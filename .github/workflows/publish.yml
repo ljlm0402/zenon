@@ -14,19 +14,29 @@ jobs:
       - name: ⬇️ Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ⎔ Use Node.js 20
+      - name: ⎔ Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: 'https://registry.npmjs.org/'
 
-      - name: 📦 Install pnpm
-        run: npm install -g pnpm
+      - name: Validate tag and choose npm channel
+        id: release
+        run: node scripts/release-tag.mjs
 
       - name: 📦 Install Dependencies
-        run: pnpm install
+        run: npm ci --ignore-scripts
+
+      - name: Validate release
+        run: npm run check
+
+      - name: Check packed consumer with minimum supported Vue
+        run: npm run test:package
+        env:
+          ZENON_TEST_VUE_VERSION: 3.2.0
 
       - name: 🚀 Publish to npm
-        run: npm publish --access public
+        run: npm publish --access public --tag "$NPM_DIST_TAG"
         env:
+          NPM_DIST_TAG: ${{ steps.release.outputs.dist_tag }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

@@ -61,7 +61,7 @@
 - 🔌 **Pluggable Middleware** - Logger, Persist, ErrorBoundary, and more
 - 🧩 **Composable** - Chain or compose multiple middlewares
 - 📦 **Tree-shakeable** - Import only what you need
-- ✅ **Production Ready** - Fully tested with 30+ test cases
+- ✅ **Tested** - Unit, regression, and package consumer checks
 
 ## 💾 Installation
 
@@ -186,7 +186,7 @@ withErrorBoundary({
     console.error(`Error in ${actionName}:`, error);
   },
   preventRollback: false, // Prevent state rollback on error (default: false)
-  rethrow: false, // Rethrow error after handling (default: false)
+  rethrow: false, // Rethrow error after handling (default: true)
 });
 ```
 
@@ -230,10 +230,10 @@ Creates a new store with reactive state management.
 ```ts
 function createStore<T>(
   initializer: (set: SetFunction<T>, get: GetFunction<T>) => T
-): StoreApi<T>;
+): Store<T>;
 ```
 
-**Returns:** `StoreApi<T>` with the following methods:
+**Returns:** `Store<T>` with the following methods:
 
 - `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - Subscribe to partial state
 - `subscribe(listener: Listener<T>): () => void` - Subscribe to all state changes
@@ -277,7 +277,7 @@ store.setSilent({ count: 10 }); // Updates state without triggering listeners
 Zenon is written in TypeScript and provides full type safety out of the box.
 
 ```ts
-import { createStore, StoreApi, SetFunction, GetFunction } from "zenon";
+import { createStore, type Store, type SetFunction, type GetFunction } from "zenon";
 
 // Type your store
 type CounterState = {
@@ -286,7 +286,7 @@ type CounterState = {
   decrement: () => void;
 };
 
-export const useCounter = (): StoreApi<CounterState> =>
+export const useCounter = (): Store<CounterState> =>
   createStore<CounterState>((set, get) => ({
     count: 0,
     increment: () => set({ count: get().count + 1 }, "increment"),
@@ -296,7 +296,7 @@ export const useCounter = (): StoreApi<CounterState> =>
 
 **Exported Types:**
 
-- `StoreApi<T>` - Store instance type
+- `Store<T>` - Store instance type
 - `SetFunction<T>` - State setter function type
 - `GetFunction<T>` - State getter function type
 - `Listener<T>` - Subscribe callback type
@@ -304,7 +304,7 @@ export const useCounter = (): StoreApi<CounterState> =>
 
 ## 🧪 Testing
 
-Zenon is thoroughly tested with 30+ test cases covering all features:
+The test suite covers core behavior and selected failure cases:
 
 - ✅ Core store functionality (reactivity, subscriptions, selectors)
 - ✅ All middleware plugins (logger, persist, error boundary)
@@ -314,7 +314,7 @@ Zenon is thoroughly tested with 30+ test cases covering all features:
 Run tests:
 
 ```bash
-pnpm test
+npm run check # types, tests, build, packed consumer checks
 ```
 
 ## 🤝 Contributing
@@ -330,3 +330,62 @@ Contributions are always welcome! Please feel free to open an issue or submit a 
 <p align="center">
   Made with ❤️ by <a href="https://github.com/ljlm0402">AGUMON</a> 🦖
 </p>
+
+## Behavioral boundaries
+
+- The factory examples create a new store per call. For a shared SPA store, create one module-level instance and return it from the composable. In SSR, create a separate instance per request.
+- Specify `createStore<State>`, `compose<State>` and plugin type arguments for consistent patch checking; inference through recursive initializer callbacks is not a complete type-safety guarantee.
+- `getState()` and listener `prevState` are shallow snapshots; nested objects are shared. Replace nested values instead of mutating them in place.
+- `setSilent` updates Vue reactivity but bypasses subscriber notifications and middleware set wrappers, including persistence. Direct mutations also bypass these wrappers.
+- Persistence restores only declared data fields, never actions, unknown keys or prototype-related keys. `partialKeys: []` saves and restores no data.
+- Both legacy `merge` string modes shallowly overlay keys. Supply a callback for nested merging. Version mismatches use defaults unless a synchronous `migrate` callback is supplied; failed hydration preserves the original record and disables all writes for that instance. Explicitly set `onHydrationError: "overwrite"` to discard it. Capture the instance controller through `onReady` and call `rehydrate()` after repairing storage.
+- Error boundaries handle synchronous exceptions and Promise rejections. `rethrow` defaults to `true`; when false, failed actions may return/resolve `undefined` and the return type now includes `undefined` (`HandledState<T>`). A dynamic boolean is typed conservatively. Composition with value-returning actions may require updating the composed state type.
+- `preventRollback` controls shallow recovery of a failing wrapped `set`, not an action-wide transaction or reversal of notifications, persistence, or concurrent async changes. Core patch-failure recovery is separate.
+- Reserve `useSelector`, `subscribe`, `setSilent` and `getState` for the public API.
+
+### Hydration validation and failure ownership
+
+`validate: (persisted) => boolean` checks the filtered persisted data before merging. It is not called for a missing record. Returning false or throwing rejects hydration and preserves the original storage by default. Validation and merge callbacks should be pure.
+
+Propagated set/get failures are reported at the action boundary instead of twice. Errors caught inside the action are not reported. Suppressed set/get failures (`rethrow: false`) are reported where handled. A failing error callback is logged without replacing the original exception. Nested public actions or multiple error boundaries may report the same propagated failure at their respective boundaries.
+
+Create an instance per SSR request and share it through that app's provide/inject. Concurrent server rendering is tested; automatic client hydration serialization is not provided.
+
+### Migrations and recovery
+
+`migrate(previous, fromVersion)` converts older or unversioned records to the current schema. Future, negative, fractional, and nonnumeric versions are rejected. `partialKeys` and `validate` apply after migration, before custom merging. Callbacks must be synchronous and pure.
+
+The original string is backed up at `backupKey` (default: `<key>:zenon:backup`) before committing migrated data. Migration storage writes must succeed before updating memory. A different existing backup blocks migration; archive it or choose another backup key. Backups are never automatically overwritten or deleted. Web Storage is not a multi-key or cross-tab transaction; custom storage must preserve previous values when a write throws.
+
+Capture a `PersistController` with `onReady: controller => { persistence = controller; }`:
+
+- `getStatus()` returns a nonreactive snapshot: `status` (`ready`, `error`, `unavailable`), `writesBlocked`, optional `error`, and `backupKey`.
+- `rehydrate()` explicitly rereads storage, overwriting matching in-memory fields without subscriber notifications. It returns success/failure and can resume writes after repaired hydration.
+- `retryPersist()` retries writing current memory, but never bypasses blocked hydration. It returns success/failure.
+
+Recovery calls made inside `onReady` or during another recovery return false. A failed migration/backup or detected concurrent storage change blocks automatic writes even with `onHydrationError: "overwrite"`. Repair the cause and call `rehydrate()`. An empty-store initial write failure or ordinary update failure can use `retryPersist()`.
+
+### Request- and component-scoped stores
+
+```ts
+import { createStore, createStoreContext } from "zenon";
+
+export const counterContext = createStoreContext((count: number) =>
+  createStore(() => ({ count })), "Counter"
+);
+
+// Per request: create a fresh SSR app, then register a fresh store.
+const store = counterContext.provideTo(app, initialCount);
+// In a parent's synchronous setup: counterContext.provideStore(initialCount)
+// In descendants' synchronous setup: counterContext.useStore()
+```
+
+The context holds a unique injection key and the factory, not a global store. Factory arguments and store types are inferred. The factory must synchronously return a fresh instance; returning a singleton defeats request isolation. A new SSR app is required per request.
+
+`provideStore` returns the new store for the provider component. `useStore` resolves the nearest ancestor/app provider, not a provider on the same component. Missing providers, use outside component setup, and duplicate registration on the same app/component throw actionable errors. Call component helpers before awaiting. Nested providers affect only their descendants; contexts with identical display names remain independent.
+
+This API does not serialize state into HTML or perform client hydration.
+
+## 2.0 upgrade notes
+
+Version 2.0 changes persistence failure defaults, handled action return types, and the middleware composition contract. Review the [release and migration notes (Korean)](./docs/RELEASE_NOTES.ko.md) before upgrading. The [release plan (Korean)](./docs/RELEASE_PLAN.ko.md) records publication status and validation limits.

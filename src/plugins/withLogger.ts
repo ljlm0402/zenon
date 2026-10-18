@@ -1,4 +1,4 @@
-import type { SetFunction, GetFunction, ActionName } from "../createStore";
+import type { StoreInitializer, SetFunction, GetFunction, ActionName } from "../createStore";
 
 function pickValuesOnly<T extends Record<string, any>>(obj: T) {
   const result: Record<string, any> = {};
@@ -21,8 +21,8 @@ export function withLogger<T extends Record<string, any>>(
     expanded?: boolean;
   } = {}
 ) {
-  return (initializer: (set: SetFunction<T>, get: GetFunction<T>) => T) =>
-    (set: SetFunction<T>, get: GetFunction<T>): T => {
+  return (initializer: StoreInitializer<T>) =>
+    (set: SetFunction<T>, get: GetFunction<T>, api: Parameters<StoreInitializer<T>>[2]): T => {
       const loggerSet: SetFunction<T> = (updater, actionName) => {
         const prevState = pickValuesOnly({ ...get() });
         set(updater, actionName);
@@ -53,6 +53,6 @@ export function withLogger<T extends Record<string, any>>(
         console.groupEnd();
       };
 
-      return initializer(loggerSet, get);
+      return initializer(loggerSet, get, api);
     };
 }

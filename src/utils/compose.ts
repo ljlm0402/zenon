@@ -1,9 +1,9 @@
-export function compose(...funcs: Function[]) {
-  if (funcs.length === 0) return (arg: any) => arg;
-  if (funcs.length === 1) return funcs[0];
-  return funcs.reduce(
-    (a, b) =>
-      (...args: any[]) =>
-        a(b(...args))
-  );
+import type { StoreInitializer, StoreMiddleware } from "../createStore";
+
+/** Compose middleware from right to left, retaining the initializer API. */
+export function compose<T extends Record<string, any>>(
+  ...middlewares: StoreMiddleware<T>[]
+): StoreMiddleware<T> {
+  return (initializer: StoreInitializer<T>) =>
+    middlewares.reduceRight((current, middleware) => middleware(current), initializer);
 }

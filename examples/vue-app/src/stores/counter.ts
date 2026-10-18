@@ -1,4 +1,4 @@
-import { createStore, compose } from "zenon";
+import { createStore, createStoreContext, compose } from "zenon";
 import { withLogger, withPersist, withErrorBoundary } from "zenon/plugins";
 import type { SetFunction, GetFunction, StoreApi } from "zenon";
 
@@ -13,12 +13,12 @@ type CounterActions = {
 const STORE_KEY = "zenon-counter";
 
 // Compose DX with Error Boundary
-export const useCounter = () =>
+export const createCounter = (initialCount = 0) =>
   createStore(
-    compose(
-      withLogger({ store: "counter", timestamp: true, expanded: false }),
+    compose<CounterState & CounterActions>(
+      withLogger<CounterState & CounterActions>({ store: "counter", timestamp: true, expanded: false }),
       withPersist<CounterState & CounterActions>(STORE_KEY, {
-        storage: window.sessionStorage,
+        storage: typeof window === "undefined" ? undefined : window.sessionStorage,
         version: 1,
         onError: (error, context) => {
           console.error(`[Counter Persist Error - ${context}]:`, error);
@@ -39,7 +39,7 @@ export const useCounter = () =>
           "setSilent" | "subscribe"
         >
       ) => ({
-        count: 0,
+        count: initialCount,
         increase: () => set({ count: get().count + 1 }, "increase"),
         decrease: () => set({ count: get().count - 1 }, "decrease"),
         reset: () => set({ count: 0 }, "reset"),
@@ -53,16 +53,6 @@ export const useCounter = () =>
     )
   );
 
-// Middleware Chain DX
-// export const useCounter = () =>
-//   createStore(
-//     withLogger({ store: "counter", timestamp: true, expanded: true })(
-//       withPersist<CounterState & CounterActions>(STORE_KEY, {
-//         storage: window.sessionStorage,
-//       })((set, get) => ({
-//         count: 0,
-//         increase: () => set({ count: get().count + 1 }, "increase"),
-//         reset: () => set({ count: 0 }, "reset"),
-//       }))
-//     )
-//   );
+// The context is shared; each provider creates a fresh store instance.
+export const { provideStore: provideCounter, useStore: useCounter } =
+  createStoreContext(createCounter, "Counter");

@@ -1,0 +1,27 @@
+name: Validate
+
+on:
+  push:
+    branches: [main, master, development]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+      - name: Check packed consumer with minimum supported Vue
+        run: npm run test:package
+        env:
+          ZENON_TEST_VUE_VERSION: 3.2.0
+      - run: npx tsc --noEmit -p examples/vue-app/tsconfig.json
+      - run: npx vite build --config examples/vue-app/vite.config.ts examples/vue-app

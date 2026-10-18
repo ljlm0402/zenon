@@ -1,6 +1,6 @@
 {
   "name": "zenon",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "A minimalist Zustand-inspired state manager for Vue 3 with TypeScript support",
   "author": "AGUMON <ljlm0402@gmail.com>",
   "license": "MIT",
@@ -20,24 +20,39 @@
     "error-boundary",
     "logger"
   ],
-  "main": "dist/zenon.cjs.js",
-  "module": "dist/zenon.es.js",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/zenon.es.js",
-      "require": "./dist/zenon.cjs.js",
-      "types": "./dist/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./plugins": {
-      "import": "./dist/plugins/index.js",
-      "require": "./dist/plugins/index.js",
-      "types": "./dist/plugins/index.d.ts"
+      "import": {
+        "types": "./dist/plugins/index.d.mts",
+        "default": "./dist/plugins/index.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/index.d.ts",
+        "default": "./dist/plugins/index.js"
+      }
     },
     "./utils/compose": {
-      "import": "./dist/utils/compose.js",
-      "require": "./dist/utils/compose.js",
-      "types": "./dist/utils/compose.d.ts"
+      "import": {
+        "types": "./dist/utils/compose.d.mts",
+        "default": "./dist/utils/compose.mjs"
+      },
+      "require": {
+        "types": "./dist/utils/compose.d.ts",
+        "default": "./dist/utils/compose.js"
+      }
     }
   },
   "files": [
@@ -49,7 +64,12 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "prepare": "pnpm build"
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "test:run": "vitest run",
+    "test:package": "node scripts/check-package.mjs",
+    "check": "npm run typecheck && npm run test:run && npm run test:release && npm run build && npm run test:package",
+    "test:release": "node --test scripts/check-release-tag.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.0.10",
