@@ -56,12 +56,45 @@
 - ⚡️ **경량화** - 작은 번들 크기와 빠른 성능
 - 🔄 **반응형** - Vue 3의 반응형 시스템 기반
 - 🔌 **플러그 가능** - 미들웨어로 기능 확장 (Logger, Persist, ErrorBoundary)
-- 🎯 **부분 구독** - `useSelector`로 필요한 상태만 구독
+- 🎯 **계산된 선택자** - `useSelector`로 필요한 반응형 값을 계산
 - 🛡️ **TypeScript 지원** - 명시적 상태 타입과 미들웨어 타입 지원
 - 📦 **제로 의존성** - Vue 3 외 추가 의존성 없음
 - 🧩 **간단한 API** - Zustand에서 영감을 받은 직관적인 API
 - 🧪 **검증 자동화** - 단위·회귀 테스트와 실제 배포 패키지 검사
 - 🎨 **Composition API 우선** - Vue 3의 모던 API 스타일
+
+## 2.0.0 주요 변경 사항
+
+2.0.0은 저장 데이터 복구와 범위별 스토어 공유를 추가하고, 패키지 로딩·미들웨어·오류 처리를 개선한 버전입니다. 아래는 1.2.0 대비 변경 사항입니다.
+
+### 수정 사항
+
+| 영역 | 2.0.0 변경 내용 |
+| --- | --- |
+| 패키지 로딩 | ESM/CJS 진입점과 TypeScript 선언을 실제 빌드 파일에 맞춰 import/require 실패를 수정했습니다. |
+| 미들웨어 | 모든 기본 미들웨어가 초기화 함수의 세 번째 `api` 인자를 전달합니다. |
+| 데이터 복원 | 선언된 데이터 필드만 복원하고 액션·미선언 필드·프로토타입 관련 키를 제외합니다. 저장소 접근 오류를 처리하고 `partialKeys: []`의 저장·복원 동작을 통일했습니다. |
+| 오류 처리 | 동기 예외와 Promise 거부를 처리하고 액션의 `this`를 유지합니다. set/get 오류의 중복 보고를 줄이고 오류 핸들러 실패가 원래 예외를 가리지 않도록 했습니다. |
+| 상태 갱신·알림 | 패치 getter를 적용 전에 평가하고 대입 실패 시 얕은 복원을 보강했습니다. 구독 알림 대상은 알림 시작 시점의 목록으로 고정합니다. |
+| 타입·공개 API | `setSilent`, 얕은 `getState`, `Store<T>`를 공개하고 미들웨어 조합과 오류 처리 반환 타입을 보완했습니다. |
+
+### 추가 기능
+
+- **데이터 마이그레이션·검증:** `migrate`로 이전 저장 스키마를 변환하고 `validate`로 복원 값을 검증합니다. 사용자 정의 `merge` 콜백으로 병합 방식을 지정할 수 있습니다.
+- **원본 백업·복구:** 마이그레이션 결과 저장 전에 원본을 백업합니다. `onReady`로 받은 `PersistController`의 `getStatus()`로 상태를 확인하고, `rehydrate()`로 다시 읽거나 `retryPersist()`로 저장을 재시도합니다.
+- **범위별 스토어 공유:** `createStoreContext`의 `provideStore`, `useStore`, `provideTo`로 컴포넌트 트리와 SSR 요청별 상태를 공유합니다. factory는 새 스토어를 반환해야 하며 SSR 앱도 요청마다 새로 생성해야 합니다.
+- **배포 검증:** 실제 패키지 소비자와 버전 일치 검사를 CI에 추가했습니다. 정식 버전은 `latest`, 후보 버전은 `next` 채널로 구분합니다.
+
+### 1.x에서 업그레이드할 때
+
+- 복원 실패 시 기본값은 **원본 보존과 자동 쓰기 차단**입니다. 실패 데이터를 의도적으로 버릴 때만 `onHydrationError: "overwrite"`를 사용하세요. 이 옵션도 백업·마이그레이션 결과 저장 실패를 무시하지 않습니다.
+- `rethrow: false` 또는 동적 boolean 옵션의 액션 반환 타입에는 `undefined`가 포함됩니다. 결과 사용 전에 해당 경우를 처리하세요.
+- `compose`는 스토어 미들웨어 전용 타입입니다. 복원할 필드는 초기 상태에 선언하고, `useSelector`, `subscribe`, `setSilent`, `getState`는 상태·액션 이름으로 사용하지 마세요.
+- `getState()`는 얕은 스냅샷입니다. `setSilent`는 수동 구독과 자동 저장을 우회합니다. 액션 전체 롤백, 선택자 기반 리스너 구독, 자동 SSR 직렬화·클라이언트 hydration은 포함하지 않습니다.
+
+**릴리스 검증:** 기능·회귀 테스트 110개와 릴리스 정책 테스트 4개, 소스·예제 타입 검사와 빌드, 원격 CI를 통과했습니다. Vue 3.2.0·3.5.17 / Node 22.16.0에서 실제 패키지의 ESM/CJS·SSR·NodeNext 타입을 검증했습니다. 모든 버전 조합이나 소비 앱의 동작까지 보장하는 결과는 아닙니다.
+
+복구 정책과 이전 예제는 [2.0.0 변경 및 이전 안내](./docs/RELEASE_NOTES.ko.md)를 참고하세요.
 
 ## 📦 설치
 
@@ -228,22 +261,24 @@ export const useStore = () =>
 반응형 상태 관리가 가능한 새 스토어를 생성합니다.
 
 ```ts
-function createStore<T>(
-  initializer: (set: SetFunction<T>, get: GetFunction<T>) => T
+function createStore<T extends Record<string, any>>(
+  initializer: StoreInitializer<T>
 ): Store<T>;
 ```
 
+`StoreInitializer<T>`는 `(set, get, api)`를 받으며 `api`는 `setSilent`와 `subscribe`를 제공합니다.
+
 **반환값:** 다음 메서드를 가진 `Store<T>`:
 
-- `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - 부분 상태 구독
-- `subscribe(listener: Listener<T>): () => void` - 모든 상태 변경 구독
+- `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - 상태에서 계산된 반응형 값 생성
+- `subscribe(listener: Listener<T>): () => void` - `set`을 통한 상태 갱신 구독
 - `setSilent(patch: Partial<T>)` - 구독자 알림 없이 상태 업데이트
 - `getState(): T` - 현재 상태 스냅샷 가져오기
 - 초기화 함수에서 정의한 모든 스토어 액션
 
 ### useSelector
 
-스토어 상태의 특정 부분만 구독합니다. 선택된 값이 변경될 때만 재렌더링을 트리거합니다.
+스토어 상태에서 계산한 Vue computed ref를 반환합니다. 콜백 기반 `subscribe` API와는 별개입니다.
 
 ```ts
 const store = useCounter();
@@ -253,7 +288,7 @@ const double = store.useSelector((s) => s.count * 2); // 파생 값도 가능
 
 ### subscribe
 
-콜백 함수로 모든 상태 변경을 구독합니다.
+`set`을 통한 갱신을 콜백으로 받습니다. 직접 상태 변경과 `setSilent`는 이 리스너에 알리지 않습니다.
 
 ```ts
 const unsubscribe = store.subscribe((state, prevState) => {
@@ -266,7 +301,7 @@ unsubscribe();
 
 ### setSilent
 
-구독자에게 알리지 않고 상태를 업데이트합니다. 배치 업데이트나 내부 상태 변경에 유용합니다.
+Vue 반응형 상태를 갱신하지만 수동 구독과 저장을 포함한 미들웨어 set 래퍼를 우회합니다. 배치 처리나 트랜잭션 기능은 아닙니다.
 
 ```ts
 store.setSilent({ count: 10 }); // 리스너 트리거 없이 상태 업데이트
@@ -274,7 +309,7 @@ store.setSilent({ count: 10 }); // 리스너 트리거 없이 상태 업데이�
 
 ## 🔷 TypeScript 지원
 
-Zenon은 TypeScript로 작성되었으며 완전한 타입 안정성을 기본 제공합니다.
+Zenon은 상태·액션·미들웨어 타입을 제공합니다. 초기화 함수를 조합할 때는 명시적 상태 타입 인자로 타입 검사를 유지하세요.
 
 ```ts
 import { createStore, type Store, type SetFunction, type GetFunction } from "zenon";
