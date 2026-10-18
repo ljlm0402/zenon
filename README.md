@@ -53,48 +53,15 @@
 
 ## ✨ Features
 
-- 🍃 **Vue 3 Composition API** - Modern reactive state management
-- ⚡️ **Zustand-like DX** - Familiar API with `set`, `get`, and selectors
-- 🧑‍💻 **TypeScript Support** - Typed state, actions and middleware
-- 🚀 **Lightweight** - Minimal bundle size, zero dependencies (except Vue)
-- 🎯 **Computed Selectors** - Derive reactive values with `useSelector`
-- 🔌 **Pluggable Middleware** - Logger, Persist, ErrorBoundary, and more
-- 🧩 **Composable** - Chain or compose multiple middlewares
-- 📦 **Tree-shakeable** - Import only what you need
-- ✅ **Tested** - Unit, regression, and package consumer checks
-
-## What's new in 2.0.0
-
-Version 2.0.0 adds persistence recovery and scoped stores while fixing package loading, middleware forwarding, and error handling. The following changes are relative to 1.2.0.
-
-### Fixes
-
-| Area | Change in 2.0.0 |
-| --- | --- |
-| Package loading | ESM/CJS entrypoints and TypeScript declarations now match the built files. |
-| Middleware | All built-in middleware forwards the initializer's third `api` argument. |
-| Persistence | Restores only declared data fields; excludes actions, unknown fields and prototype-related keys. Storage access errors are handled, and `partialKeys: []` consistently excludes all data. |
-| Error handling | Handles synchronous exceptions and Promise rejections, preserves action `this`, reduces duplicate set/get error reports, and keeps error-handler failures from replacing the original exception. |
-| State updates | Evaluates patch getters before applying changes and improves shallow recovery from assignment failures. Subscriber lists are fixed at the start of each notification. |
-| Types and public API | Exposes `setSilent`, shallow `getState` and `Store<T>`; adds typed middleware composition and accurate handled-action return types. |
-
-### New capabilities
-
-- **Data migration and validation:** `migrate` converts older saved schemas; `validate` checks restored values, and a custom `merge` callback can control merging.
-- **Backups and recovery:** migrations back up the original record before committing. Capture a `PersistController` through `onReady` to inspect `getStatus()`, reread storage with `rehydrate()`, or retry saving with `retryPersist()`.
-- **Scoped stores:** `createStoreContext` provides typed `provideStore`, `useStore` and `provideTo` helpers for component trees and SSR requests. Each provider factory must return a fresh store; SSR also requires a new app per request.
-- **Release checks:** CI validates packed consumers and version consistency before publication. Stable releases use `latest`; prereleases use `next`.
-
-### Upgrading from 1.x
-
-- Failed restoration now **preserves the original record and blocks automatic writes** by default. Use `onHydrationError: "overwrite"` only when discarding failed hydration data is intentional; it does not bypass backup or migration-commit failures.
-- With `rethrow: false` or a dynamic boolean, action return types include `undefined`. Handle that case before using a result.
-- `compose` is typed for store middleware. Declare fields in the initial state if they must be restored, and reserve `useSelector`, `subscribe`, `setSilent` and `getState` for the public API.
-- `getState()` remains shallow. `setSilent` bypasses manual subscribers and persistence. Action-wide rollback, selector-based listener subscriptions, and automatic SSR serialization/client hydration are not included.
-
-**Release validation:** 110 unit/regression tests and 4 release-policy tests passed, alongside source/example type checks, builds and remote CI. Packed ESM/CJS, SSR and NodeNext type checks passed with Vue 3.2.0 and 3.5.17 on Node 22.16.0. This does not establish compatibility with every version combination or replace consumer-app testing.
-
-See the [detailed release and migration notes (Korean)](./docs/RELEASE_NOTES.ko.md) for recovery policies and upgrade examples.
+- 🍃 **Vue reactivity** — Define state and actions with `createStore`, and derive computed values with `useSelector`.
+- 🧩 **Composable middleware** — Combine logging, persistence and error handling with `compose`.
+- 💾 **Persistence and validation** — Choose which fields to save, validate restored data and customize merging.
+- 🛡️ **Data migration and recovery** — Convert saved schemas with `migrate`, back up the original record, inspect persistence status and explicitly retry restoration or saving. Failed restoration preserves the original record by default.
+- 🌐 **Scoped state sharing** — Use `createStoreContext` to share stores within a component tree or an SSR request. Providers create fresh stores, and SSR apps are created per request.
+- 🚦 **Sync and async error handling** — Handle action exceptions and Promise rejections, with a choice to rethrow or handle failures.
+- 🧑‍💻 **TypeScript support** — Typed state, actions, middleware and context arguments, with ESM/CJS entrypoints and type declarations.
+- 📦 **Vue as the only runtime dependency** — Import the core and middleware through separate package entrypoints.
+- 🧪 **Automated validation** — Unit, regression, SSR and packed-consumer checks cover runtime behavior and TypeScript usage.
 
 ## 💾 Installation
 
@@ -373,9 +340,10 @@ Contributions are always welcome! Please feel free to open an issue or submit a 
 - `getState()` and listener `prevState` are shallow snapshots; nested objects are shared. Replace nested values instead of mutating them in place.
 - `setSilent` updates Vue reactivity but bypasses subscriber notifications and middleware set wrappers, including persistence. Direct mutations also bypass these wrappers.
 - Persistence restores only declared data fields, never actions, unknown keys or prototype-related keys. `partialKeys: []` saves and restores no data.
-- Both legacy `merge` string modes shallowly overlay keys. Supply a callback for nested merging. Version mismatches use defaults unless a synchronous `migrate` callback is supplied; failed hydration preserves the original record and disables all writes for that instance. Explicitly set `onHydrationError: "overwrite"` to discard it. Capture the instance controller through `onReady` and call `rehydrate()` after repairing storage.
-- Error boundaries handle synchronous exceptions and Promise rejections. `rethrow` defaults to `true`; when false, failed actions may return/resolve `undefined` and the return type now includes `undefined` (`HandledState<T>`). A dynamic boolean is typed conservatively. Composition with value-returning actions may require updating the composed state type.
+- Both `merge` string modes shallowly overlay keys. Supply a callback for nested merging. Version mismatches use defaults unless a synchronous `migrate` callback is supplied; failed hydration preserves the original record and disables all writes for that instance. Explicitly set `onHydrationError: "overwrite"` to discard it. Capture the instance controller through `onReady` and call `rehydrate()` after repairing storage.
+- Error boundaries handle synchronous exceptions and Promise rejections. `rethrow` defaults to `true`; when false, failed actions may return/resolve `undefined` and the return type includes `undefined` (`HandledState<T>`). A dynamic boolean is typed conservatively. Composition with value-returning actions may require updating the composed state type.
 - `preventRollback` controls shallow recovery of a failing wrapped `set`, not an action-wide transaction or reversal of notifications, persistence, or concurrent async changes. Core patch-failure recovery is separate.
+- `compose` combines store middleware; use a separate utility for general-purpose function composition.
 - Reserve `useSelector`, `subscribe`, `setSilent` and `getState` for the public API.
 
 ### Hydration validation and failure ownership
