@@ -53,15 +53,15 @@
 
 ## ✨ 주요 기능
 
-- ⚡️ **경량화** - 작은 번들 크기와 빠른 성능
-- 🔄 **반응형** - Vue 3의 반응형 시스템 기반
-- 🔌 **플러그 가능** - 미들웨어로 기능 확장 (Logger, Persist, ErrorBoundary)
-- 🎯 **부분 구독** - `useSelector`로 필요한 상태만 구독
-- 🛡️ **TypeScript 지원** - 명시적 상태 타입과 미들웨어 타입 지원
-- 📦 **제로 의존성** - Vue 3 외 추가 의존성 없음
-- 🧩 **간단한 API** - Zustand에서 영감을 받은 직관적인 API
-- 🧪 **검증 자동화** - 단위·회귀 테스트와 실제 배포 패키지 검사
-- 🎨 **Composition API 우선** - Vue 3의 모던 API 스타일
+- 🍃 **Vue 반응성** — `createStore`로 상태와 액션을 정의하고 `useSelector`로 필요한 값을 계산합니다.
+- 🧩 **미들웨어 조합** — `compose`로 로깅·저장·오류 처리 미들웨어를 조합합니다.
+- 💾 **데이터 저장과 검증** — 저장할 필드를 선택하고 복원 데이터를 검증하며 병합 방식을 지정합니다.
+- 🛡️ **데이터 마이그레이션과 복구** — `migrate`로 저장 스키마를 변환하고 원본을 백업합니다. 저장 상태 조회와 명시적 복원·저장 재시도를 지원하며, 복원 실패 시 기본적으로 원본을 보존합니다.
+- 🌐 **범위별 상태 공유** — `createStoreContext`로 컴포넌트 트리 또는 SSR 요청 안에서 상태를 공유합니다. provider는 새 스토어를 생성하고 SSR 앱은 요청별로 생성합니다.
+- 🚦 **동기·비동기 오류 처리** — 액션 예외와 Promise 거부를 처리하며 오류 재전파 여부를 선택할 수 있습니다.
+- 🧑‍💻 **TypeScript 지원** — 상태·액션·미들웨어·context 인자에 타입을 적용하고 ESM/CJS 진입점과 타입 선언을 제공합니다.
+- 📦 **Vue 외 런타임 의존성 없음** — 코어와 미들웨어를 별도 패키지 진입점에서 가져올 수 있습니다.
+- 🧪 **검증 자동화** — 단위·회귀·SSR·실제 패키지 소비자 검사로 런타임 동작과 TypeScript 사용을 검증합니다.
 
 ## 📦 설치
 
@@ -228,22 +228,24 @@ export const useStore = () =>
 반응형 상태 관리가 가능한 새 스토어를 생성합니다.
 
 ```ts
-function createStore<T>(
-  initializer: (set: SetFunction<T>, get: GetFunction<T>) => T
+function createStore<T extends Record<string, any>>(
+  initializer: StoreInitializer<T>
 ): Store<T>;
 ```
 
+`StoreInitializer<T>`는 `(set, get, api)`를 받으며 `api`는 `setSilent`와 `subscribe`를 제공합니다.
+
 **반환값:** 다음 메서드를 가진 `Store<T>`:
 
-- `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - 부분 상태 구독
-- `subscribe(listener: Listener<T>): () => void` - 모든 상태 변경 구독
+- `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - 상태에서 계산된 반응형 값 생성
+- `subscribe(listener: Listener<T>): () => void` - `set`을 통한 상태 갱신 구독
 - `setSilent(patch: Partial<T>)` - 구독자 알림 없이 상태 업데이트
 - `getState(): T` - 현재 상태 스냅샷 가져오기
 - 초기화 함수에서 정의한 모든 스토어 액션
 
 ### useSelector
 
-스토어 상태의 특정 부분만 구독합니다. 선택된 값이 변경될 때만 재렌더링을 트리거합니다.
+스토어 상태에서 계산한 Vue computed ref를 반환합니다. 콜백 기반 `subscribe` API와는 별개입니다.
 
 ```ts
 const store = useCounter();
@@ -253,7 +255,7 @@ const double = store.useSelector((s) => s.count * 2); // 파생 값도 가능
 
 ### subscribe
 
-콜백 함수로 모든 상태 변경을 구독합니다.
+`set`을 통한 갱신을 콜백으로 받습니다. 직접 상태 변경과 `setSilent`는 이 리스너에 알리지 않습니다.
 
 ```ts
 const unsubscribe = store.subscribe((state, prevState) => {
@@ -266,7 +268,7 @@ unsubscribe();
 
 ### setSilent
 
-구독자에게 알리지 않고 상태를 업데이트합니다. 배치 업데이트나 내부 상태 변경에 유용합니다.
+Vue 반응형 상태를 갱신하지만 수동 구독과 저장을 포함한 미들웨어 set 래퍼를 우회합니다. 배치 처리나 트랜잭션 기능은 아닙니다.
 
 ```ts
 store.setSilent({ count: 10 }); // 리스너 트리거 없이 상태 업데이트
@@ -274,7 +276,7 @@ store.setSilent({ count: 10 }); // 리스너 트리거 없이 상태 업데이�
 
 ## 🔷 TypeScript 지원
 
-Zenon은 TypeScript로 작성되었으며 완전한 타입 안정성을 기본 제공합니다.
+Zenon은 상태·액션·미들웨어 타입을 제공합니다. 초기화 함수를 조합할 때는 명시적 상태 타입 인자로 타입 검사를 유지하세요.
 
 ```ts
 import { createStore, type Store, type SetFunction, type GetFunction } from "zenon";
@@ -338,9 +340,10 @@ npm run check # types, tests, build, packed consumer checks
 - `getState()`와 구독 콜백의 `prevState`는 얕은 스냅샷입니다. 중첩 객체는 공유되므로 변경 시 새 객체로 교체하세요.
 - `setSilent`는 Vue 반응성을 유지하지만 `subscribe` 알림과 logger/persist/error-boundary의 `set` 래퍼를 통과하지 않습니다. 직접 상태를 변경해도 구독 알림·자동 저장이 실행되지 않습니다.
 - `withPersist`는 선언된 데이터 필드만 복원하고 액션·알 수 없는 키·프로토타입 관련 키는 무시합니다. `partialKeys: []`는 아무 데이터도 복원하거나 저장하지 않습니다.
-- `merge: "replace"`와 `"merge"`는 호환성을 위해 모두 최상위 키를 얕게 덮어씁니다. 중첩 병합은 콜백으로 지정하세요. `migrate`가 없으면 버전 불일치에 초기값을 사용합니다. `migrate`를 지정하면 이전 버전 데이터를 검증·백업 후 변환합니다. 복원 실패 시 기본 정책은 원본 보존이며 해당 인스턴스의 모든 저장을 중단합니다. 기존처럼 초기값으로 덮어쓰려면 `onHydrationError: "overwrite"`를 명시하세요. `onReady`로 받은 컨트롤러의 `rehydrate()`로 원본 복구 후 다시 읽을 수 있습니다.
-- `withErrorBoundary`는 동기 예외와 Promise 거부를 처리합니다. `rethrow` 기본값은 `true`입니다. `false`이면 실패한 액션의 결과는 `undefined`일 수 있습니다. `rethrow: false` 또는 동적 boolean 옵션은 반환 타입에 `undefined`를 포함합니다. `HandledState<T>`가 이 반환 상태를 표현합니다. 기존 `compose<T>`에서 값을 반환하는 액션과 조합할 때 타입 수정이 필요할 수 있습니다.
+- `merge: "replace"`와 `"merge"`는 모두 최상위 키를 얕게 덮어씁니다. 중첩 병합은 콜백으로 지정하세요. `migrate`가 없으면 버전 불일치에 초기값을 사용합니다. `migrate`를 지정하면 이전 버전 데이터를 검증·백업 후 변환합니다. 복원 실패 시 기본 정책은 원본 보존이며 해당 인스턴스의 모든 저장을 중단합니다. 초기값으로 덮어쓰려면 `onHydrationError: "overwrite"`를 명시하세요. `onReady`로 받은 컨트롤러의 `rehydrate()`로 원본 복구 후 다시 읽을 수 있습니다.
+- `withErrorBoundary`는 동기 예외와 Promise 거부를 처리합니다. `rethrow` 기본값은 `true`입니다. `false`이면 실패한 액션의 결과는 `undefined`일 수 있습니다. `rethrow: false` 또는 동적 boolean 옵션은 반환 타입에 `undefined`를 포함합니다. `HandledState<T>`가 이 반환 상태를 표현합니다. `compose<T>`에서 값을 반환하는 액션을 조합할 때는 실패 시 반환 타입도 반영하세요.
 - `preventRollback`은 래핑된 `set` 실패에 대한 얕은 복원만 제어합니다. 액션 전체의 트랜잭션, 이미 전달한 알림·저장 내용 복원, 비동기 동시 실행 롤백을 보장하지 않습니다. 코어의 패치 실패 복원은 별도입니다.
+- `compose`는 스토어 미들웨어 조합용입니다. 일반 함수 합성에는 별도 유틸리티를 사용하세요.
 - 공개 메서드 이름 `useSelector`, `subscribe`, `setSilent`, `getState`는 상태·액션 이름으로 사용하지 마세요.
 
 전체 분석과 개선 우선순위는 [검토 보고서](./docs/PROJECT_REVIEW.ko.md)를 참고하세요.
@@ -367,7 +370,7 @@ SSR에서는 요청마다 `createStore`를 호출하고 그 인스턴스를 해�
 
 이전 버전 변환은 검증과 원본 백업, 새 버전 저장이 모두 성공해야 메모리에 반영됩니다. 기본 백업 키 `<key>:zenon:backup`은 자동 덮어쓰기·삭제되지 않습니다. 다른 내용이 있으면 먼저 별도 보관하거나 `backupKey`를 변경하세요. `rehydrate`는 메모리 값을 덮어쓸 수 있으며 수동 구독 알림은 보내지 않습니다.
 
-구체적인 사용 예, 이전 방법, 데이터 보존 범위는 [2.0.0 변경 및 이전 안내](./docs/RELEASE_NOTES.ko.md)를 참고하세요.
+구체적인 사용 예와 데이터 보존 범위는 [데이터 복구 상세 안내](./docs/RELEASE_NOTES.ko.md)를 참고하세요.
 
 ### SSR·컴포넌트 범위의 상태 공유
 

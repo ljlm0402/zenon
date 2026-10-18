@@ -53,15 +53,15 @@
 
 ## ✨ Features
 
-- 🍃 **Vue 3 Composition API** - Modern reactive state management
-- ⚡️ **Zustand-like DX** - Familiar API with `set`, `get`, and selectors
-- 🧑‍💻 **Full TypeScript Support** - Complete type safety and inference
-- 🚀 **Lightweight** - Minimal bundle size, zero dependencies (except Vue)
-- 🎯 **Selector-based Subscriptions** - Optimize rendering with partial updates
-- 🔌 **Pluggable Middleware** - Logger, Persist, ErrorBoundary, and more
-- 🧩 **Composable** - Chain or compose multiple middlewares
-- 📦 **Tree-shakeable** - Import only what you need
-- ✅ **Tested** - Unit, regression, and package consumer checks
+- 🍃 **Vue reactivity** — Define state and actions with `createStore`, and derive computed values with `useSelector`.
+- 🧩 **Composable middleware** — Combine logging, persistence and error handling with `compose`.
+- 💾 **Persistence and validation** — Choose which fields to save, validate restored data and customize merging.
+- 🛡️ **Data migration and recovery** — Convert saved schemas with `migrate`, back up the original record, inspect persistence status and explicitly retry restoration or saving. Failed restoration preserves the original record by default.
+- 🌐 **Scoped state sharing** — Use `createStoreContext` to share stores within a component tree or an SSR request. Providers create fresh stores, and SSR apps are created per request.
+- 🚦 **Sync and async error handling** — Handle action exceptions and Promise rejections, with a choice to rethrow or handle failures.
+- 🧑‍💻 **TypeScript support** — Typed state, actions, middleware and context arguments, with ESM/CJS entrypoints and type declarations.
+- 📦 **Vue as the only runtime dependency** — Import the core and middleware through separate package entrypoints.
+- 🧪 **Automated validation** — Unit, regression, SSR and packed-consumer checks cover runtime behavior and TypeScript usage.
 
 ## 💾 Installation
 
@@ -228,22 +228,24 @@ export const useStore = () =>
 Creates a new store with reactive state management.
 
 ```ts
-function createStore<T>(
-  initializer: (set: SetFunction<T>, get: GetFunction<T>) => T
+function createStore<T extends Record<string, any>>(
+  initializer: StoreInitializer<T>
 ): Store<T>;
 ```
 
+`StoreInitializer<T>` receives `(set, get, api)`, where `api` exposes `setSilent` and `subscribe`.
+
 **Returns:** `Store<T>` with the following methods:
 
-- `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - Subscribe to partial state
-- `subscribe(listener: Listener<T>): () => void` - Subscribe to all state changes
+- `useSelector<U>(selector: (state: T) => U): ComputedRef<U>` - Derive a computed value from state
+- `subscribe(listener: Listener<T>): () => void` - Subscribe to updates made through `set`
 - `setSilent(patch: Partial<T>)` - Update state without triggering subscribers
 - `getState(): T` - Get current state snapshot
 - Plus all store actions defined in your initializer
 
 ### useSelector
 
-Subscribe to a specific part of the store state. Only triggers re-renders when the selected value changes.
+Returns a Vue computed ref derived from store state. This is separate from the callback-based `subscribe` API.
 
 ```ts
 const store = useCounter();
@@ -253,7 +255,7 @@ const double = store.useSelector((s) => s.count * 2); // Derived values work too
 
 ### subscribe
 
-Subscribe to all state changes with a callback function.
+Receive updates made through `set` with a callback. Direct mutations and `setSilent` do not notify these listeners.
 
 ```ts
 const unsubscribe = store.subscribe((state, prevState) => {
@@ -266,7 +268,7 @@ unsubscribe();
 
 ### setSilent
 
-Update state without notifying subscribers. Useful for batch updates or internal state changes.
+Update Vue reactive state without notifying manual subscribers or invoking middleware set wrappers, including persistence. This does not provide batching or a transaction.
 
 ```ts
 store.setSilent({ count: 10 }); // Updates state without triggering listeners
@@ -274,7 +276,7 @@ store.setSilent({ count: 10 }); // Updates state without triggering listeners
 
 ## 🏗 TypeScript Support
 
-Zenon is written in TypeScript and provides full type safety out of the box.
+Zenon provides types for state, actions and middleware. Explicit state type arguments help preserve checking across composed initializers.
 
 ```ts
 import { createStore, type Store, type SetFunction, type GetFunction } from "zenon";
@@ -338,9 +340,10 @@ Contributions are always welcome! Please feel free to open an issue or submit a 
 - `getState()` and listener `prevState` are shallow snapshots; nested objects are shared. Replace nested values instead of mutating them in place.
 - `setSilent` updates Vue reactivity but bypasses subscriber notifications and middleware set wrappers, including persistence. Direct mutations also bypass these wrappers.
 - Persistence restores only declared data fields, never actions, unknown keys or prototype-related keys. `partialKeys: []` saves and restores no data.
-- Both legacy `merge` string modes shallowly overlay keys. Supply a callback for nested merging. Version mismatches use defaults unless a synchronous `migrate` callback is supplied; failed hydration preserves the original record and disables all writes for that instance. Explicitly set `onHydrationError: "overwrite"` to discard it. Capture the instance controller through `onReady` and call `rehydrate()` after repairing storage.
-- Error boundaries handle synchronous exceptions and Promise rejections. `rethrow` defaults to `true`; when false, failed actions may return/resolve `undefined` and the return type now includes `undefined` (`HandledState<T>`). A dynamic boolean is typed conservatively. Composition with value-returning actions may require updating the composed state type.
+- Both `merge` string modes shallowly overlay keys. Supply a callback for nested merging. Version mismatches use defaults unless a synchronous `migrate` callback is supplied; failed hydration preserves the original record and disables all writes for that instance. Explicitly set `onHydrationError: "overwrite"` to discard it. Capture the instance controller through `onReady` and call `rehydrate()` after repairing storage.
+- Error boundaries handle synchronous exceptions and Promise rejections. `rethrow` defaults to `true`; when false, failed actions may return/resolve `undefined` and the return type includes `undefined` (`HandledState<T>`). A dynamic boolean is typed conservatively. Composition with value-returning actions may require updating the composed state type.
 - `preventRollback` controls shallow recovery of a failing wrapped `set`, not an action-wide transaction or reversal of notifications, persistence, or concurrent async changes. Core patch-failure recovery is separate.
+- `compose` combines store middleware; use a separate utility for general-purpose function composition.
 - Reserve `useSelector`, `subscribe`, `setSilent` and `getState` for the public API.
 
 ### Hydration validation and failure ownership
@@ -385,7 +388,3 @@ The context holds a unique injection key and the factory, not a global store. Fa
 `provideStore` returns the new store for the provider component. `useStore` resolves the nearest ancestor/app provider, not a provider on the same component. Missing providers, use outside component setup, and duplicate registration on the same app/component throw actionable errors. Call component helpers before awaiting. Nested providers affect only their descendants; contexts with identical display names remain independent.
 
 This API does not serialize state into HTML or perform client hydration.
-
-## 2.0 upgrade notes
-
-Version 2.0 changes persistence failure defaults, handled action return types, and the middleware composition contract. Review the [release and migration notes (Korean)](./docs/RELEASE_NOTES.ko.md) before upgrading. The [release plan (Korean)](./docs/RELEASE_PLAN.ko.md) records publication status and validation limits.
