@@ -1,6 +1,6 @@
 {
   "name": "zenon",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0",
   "description": "A minimalist Zustand-inspired state manager for Vue 3 with TypeScript support",
   "author": "AGUMON <ljlm0402@gmail.com>",
   "license": "MIT",

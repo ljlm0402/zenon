@@ -343,7 +343,7 @@ npm run check # types, tests, build, packed consumer checks
 - `preventRollback`은 래핑된 `set` 실패에 대한 얕은 복원만 제어합니다. 액션 전체의 트랜잭션, 이미 전달한 알림·저장 내용 복원, 비동기 동시 실행 롤백을 보장하지 않습니다. 코어의 패치 실패 복원은 별도입니다.
 - 공개 메서드 이름 `useSelector`, `subscribe`, `setSilent`, `getState`는 상태·액션 이름으로 사용하지 마세요.
 
-전체 분석과 개선 우선순위는 [검토 보고서](./PROJECT_REVIEW.ko.md)를 참고하세요.
+전체 분석과 개선 우선순위는 [검토 보고서](./docs/PROJECT_REVIEW.ko.md)를 참고하세요.
 
 ### 복원 데이터 검증
 
@@ -367,7 +367,7 @@ SSR에서는 요청마다 `createStore`를 호출하고 그 인스턴스를 해�
 
 이전 버전 변환은 검증과 원본 백업, 새 버전 저장이 모두 성공해야 메모리에 반영됩니다. 기본 백업 키 `<key>:zenon:backup`은 자동 덮어쓰기·삭제되지 않습니다. 다른 내용이 있으면 먼저 별도 보관하거나 `backupKey`를 변경하세요. `rehydrate`는 메모리 값을 덮어쓸 수 있으며 수동 구독 알림은 보내지 않습니다.
 
-구체적인 사용 예, 이전 방법, 데이터 보존 범위는 [미출시 변경 안내](./RELEASE_NOTES.ko.md)를 참고하세요.
+구체적인 사용 예, 이전 방법, 데이터 보존 범위는 [2.0.0 변경 및 이전 안내](./docs/RELEASE_NOTES.ko.md)를 참고하세요.
 
 ### SSR·컴포넌트 범위의 상태 공유
 

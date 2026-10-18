@@ -25,11 +25,13 @@ test('invalid and ambiguous versions fail closed', () => {
 test('the workflow CLI writes the computed distribution tag', () => {
   const temp = mkdtempSync(join(tmpdir(), 'zenon-release-'));
   try {
-    writeFileSync(join(temp, 'package.json'), JSON.stringify({ version: '2.0.0-rc.1' }));
-    const output = join(temp, 'output');
-    execFileSync(process.execPath, [resolve('scripts/release-tag.mjs')], {
-      cwd: temp, env: { ...process.env, GITHUB_REF_NAME: 'v2.0.0-rc.1', GITHUB_OUTPUT: output },
-    });
-    assert.equal(readFileSync(output, 'utf8'), 'dist_tag=next\n');
+    for (const [version, channel] of [['2.0.0-rc.1', 'next'], ['2.0.0', 'latest']]) {
+      writeFileSync(join(temp, 'package.json'), JSON.stringify({ version }));
+      const output = join(temp, `output-${channel}`);
+      execFileSync(process.execPath, [resolve('scripts/release-tag.mjs')], {
+        cwd: temp, env: { ...process.env, GITHUB_REF_NAME: `v${version}`, GITHUB_OUTPUT: output },
+      });
+      assert.equal(readFileSync(output, 'utf8'), `dist_tag=${channel}\n`);
+    }
   } finally { rmSync(temp, { recursive: true, force: true }); }
 });
