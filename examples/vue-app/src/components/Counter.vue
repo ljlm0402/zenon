@@ -17,8 +17,8 @@
 import { useCounter } from "../stores/counter";
 
 const store = useCounter();
-const count = store.useSelector((s: any) => s.count); // selector로 부분구독!
-const doubled = store.useSelector((s: any) => s.count * 2); // 계산된 값도 가능!
+const count = store.useSelector((s) => s.count); // selector로 부분구독!
+const doubled = store.useSelector((s) => s.count * 2); // 계산된 값도 가능!
 const { increase, decrease, reset, increaseBy } = store;
 
 const testError = () => {

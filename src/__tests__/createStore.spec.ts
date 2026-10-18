@@ -208,29 +208,17 @@ describe("createStore", () => {
   });
 
   describe("Error handling", () => {
-    it("should handle errors in set function", () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-
-      const store = createStore((set, get) => ({
+    it("rejects a throwing patch without changing state or notifying listeners", () => {
+      const failure = new Error("patch getter");
+      const store = createStore((set) => ({
         count: 0,
-        items: [] as number[],
-        addInvalidItem: () => {
-          // This will throw when trying to assign
-          const frozen = Object.freeze({ items: [1, 2, 3] });
-          try {
-            set(frozen as any, "addInvalidItem");
-          } catch (error) {
-            // Expected to throw
-          }
-        },
+        fail: () => set({ count: 1, get items(): number[] { throw failure; } }, "fail"),
       }));
-
+      const listener = vi.fn();
+      store.subscribe(listener);
+      expect(() => store.fail()).toThrow(failure);
       expect(store.count).toBe(0);
-      store.addInvalidItem();
-
-      consoleErrorSpy.mockRestore();
+      expect(listener).not.toHaveBeenCalled();
     });
   });
 

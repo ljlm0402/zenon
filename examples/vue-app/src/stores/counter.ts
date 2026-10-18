@@ -15,8 +15,8 @@ const STORE_KEY = "zenon-counter";
 // Compose DX with Error Boundary
 export const useCounter = () =>
   createStore(
-    compose(
-      withLogger({ store: "counter", timestamp: true, expanded: false }),
+    compose<CounterState & CounterActions>(
+      withLogger<CounterState & CounterActions>({ store: "counter", timestamp: true, expanded: false }),
       withPersist<CounterState & CounterActions>(STORE_KEY, {
         storage: window.sessionStorage,
         version: 1,
@@ -56,7 +56,7 @@ export const useCounter = () =>
 // Middleware Chain DX
 // export const useCounter = () =>
 //   createStore(
-//     withLogger({ store: "counter", timestamp: true, expanded: true })(
+//     withLogger<CounterState & CounterActions>({ store: "counter", timestamp: true, expanded: true })(
 //       withPersist<CounterState & CounterActions>(STORE_KEY, {
 //         storage: window.sessionStorage,
 //       })((set, get) => ({

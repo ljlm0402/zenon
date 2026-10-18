@@ -27,6 +27,7 @@ export type Unsubscribe = () => void;
 
 export type StoreApi<T> = {
   get: GetFunction<T>;
+  getState: GetFunction<T>;
   set: SetFunction<T>;
   setSilent: SetSilentFunction<T>;
   useSelector: <S>(selector: (state: T) => S) => ComputedRef<S>;
@@ -40,26 +41,35 @@ export type StoreInitializer<T> = (
   api: Pick<StoreApi<T>, "setSilent" | "subscribe">
 ) => T;
 
+export type StoreMiddleware<T> = (initializer: StoreInitializer<T>) => StoreInitializer<T>;
+
+export type Store<T> = T & Pick<StoreApi<T>, "useSelector" | "subscribe" | "setSilent" | "getState">;
+
 export function createStore<T extends Record<string, any>>(
   initializer: StoreInitializer<T>
-): T & Pick<StoreApi<T>, "useSelector" | "subscribe"> {
+): Store<T> {
   const state = reactive({}) as T;
   const listeners = new Set<Listener<T>>();
 
   const set: SetFunction<T> = (updater, actionName) => {
+    // Evaluate patch getters before mutating the live state.
+    const patch = { ...updater };
     const prevState = { ...state };
 
     try {
-      Object.assign(state, updater);
+      Object.assign(state, patch);
     } catch (error) {
       console.error(`[Zenon] Error in set for action "${actionName}":`, error);
       // Rollback on error
+      for (const key of Object.keys(state)) {
+        if (!Object.prototype.hasOwnProperty.call(prevState, key)) delete state[key];
+      }
       Object.assign(state, prevState);
       throw error;
     }
 
     // Notify listeners after successful update
-    listeners.forEach((listener) => {
+    [...listeners].forEach((listener) => {
       try {
         listener(state, prevState);
       } catch (error) {
@@ -73,7 +83,7 @@ export function createStore<T extends Record<string, any>>(
 
   const setSilent: SetSilentFunction<T> = (updater) => {
     try {
-      Object.assign(state, updater);
+      Object.assign(state, { ...updater });
     } catch (error) {
       console.error("[Zenon] Error in setSilent:", error);
       throw error;
@@ -99,8 +109,6 @@ export function createStore<T extends Record<string, any>>(
     };
   };
 
-  const getListeners = () => listeners;
-
   const api: Pick<StoreApi<T>, "setSilent" | "subscribe"> = {
     setSilent,
     subscribe,
@@ -112,5 +120,7 @@ export function createStore<T extends Record<string, any>>(
   return Object.assign(state, {
     useSelector,
     subscribe,
-  }) as T & Pick<StoreApi<T>, "useSelector" | "subscribe">;
+    setSilent,
+    getState: () => ({ ...state }),
+  }) as Store<T>;
 }

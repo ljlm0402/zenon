@@ -1,6 +1,8 @@
 export { createStore } from "./createStore";
 export type {
   StoreApi,
+  Store,
+  StoreMiddleware,
   SetFunction,
   SetSilentFunction,
   GetFunction,
