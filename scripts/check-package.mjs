@@ -29,6 +29,11 @@ try {
   }
   const manifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
   assert.equal(manifest.name, 'zenon');
+  const sourceManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  const lock = JSON.parse(readFileSync(join(root, 'package-lock.json'), 'utf8'));
+  assert.equal(manifest.version, sourceManifest.version, 'Packed version must match the source');
+  assert.equal(lock.version, manifest.version, 'Lockfile version must match the package');
+  assert.equal(lock.packages[''].version, manifest.version, 'Lockfile root version must match the package');
   for (const mode of ['mjs', 'cjs']) {
     const lines = Object.keys(manifest.exports).map((key, index) => {
       const specifier = key === '.' ? 'zenon' : `zenon/${key.slice(2)}`;
