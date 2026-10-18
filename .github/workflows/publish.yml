@@ -30,6 +30,11 @@ jobs:
       - name: Validate release
         run: npm run check
 
+      - name: Check packed consumer with minimum supported Vue
+        run: npm run test:package
+        env:
+          ZENON_TEST_VUE_VERSION: 3.2.0
+
       - name: 🚀 Publish to npm
         run: npm publish --access public --tag "$NPM_DIST_TAG"
         env:

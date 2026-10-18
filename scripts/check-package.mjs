@@ -7,7 +7,14 @@ import { join, resolve } from 'node:path';
 // Exercise the actual tarball in an isolated consumer, including NodeNext types.
 const root = resolve('.');
 const temp = mkdtempSync(join(tmpdir(), 'zenon-package-'));
+const vueVersion = process.env.ZENON_TEST_VUE_VERSION;
 try {
+  if (vueVersion) {
+    assert.match(vueVersion, /^\d+\.\d+\.\d+$/, 'Use an exact stable Vue version for reproducible compatibility checks');
+    writeFileSync(join(temp, 'package.json'), JSON.stringify({ private: true }));
+    execFileSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', '--cache', join(temp, 'cache'), `vue@${vueVersion}`, `@vue/server-renderer@${vueVersion}`], { cwd: temp, stdio: 'pipe' });
+    assert.equal(JSON.parse(readFileSync(join(temp, 'node_modules/vue/package.json'), 'utf8')).version, vueVersion);
+  }
   execFileSync('npm', ['pack', '--ignore-scripts', '--cache', join(temp, 'cache'), '--pack-destination', temp], { cwd: root, stdio: 'pipe' });
   const archives = readdirSync(temp).filter(name => name.endsWith('.tgz'));
   assert.equal(archives.length, 1);
@@ -15,7 +22,11 @@ try {
   const packageDir = join(modules, 'zenon');
   mkdirSync(packageDir, { recursive: true });
   execFileSync('tar', ['-xzf', join(temp, archives[0]), '-C', packageDir, '--strip-components=1']);
-  symlinkSync(realpathSync(join(root, 'node_modules/vue')), join(modules, 'vue'), 'dir');
+  if (!vueVersion) {
+    symlinkSync(realpathSync(join(root, 'node_modules/vue')), join(modules, 'vue'), 'dir');
+    mkdirSync(join(modules, '@vue'), { recursive: true });
+    symlinkSync(realpathSync(join(root, 'node_modules/@vue/server-renderer')), join(modules, '@vue/server-renderer'), 'dir');
+  }
   const manifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
   assert.equal(manifest.name, 'zenon');
   for (const mode of ['mjs', 'cjs']) {
@@ -34,7 +45,7 @@ try {
       `const migrated = module0.createStore(module1.withPersist('state', { storage, version: 2, migrate: old => ({ count: old.oldCount }), onReady: value => { controller = value; } })(() => ({ count: 0 })));`,
       `if (migrated.count !== 4 || !data.has('state:zenon:backup') || controller.getStatus().status !== 'ready') throw new Error('Packed migration failed');`
     );
-    lines.push(mode === 'mjs' ? `import * as vue from 'vue'; import { renderToString } from 'vue/server-renderer';` : `const vue = require('vue'); const { renderToString } = require('vue/server-renderer');`);
+    lines.push(mode === 'mjs' ? `import * as vue from 'vue'; import { renderToString } from '@vue/server-renderer';` : `const vue = require('vue'); const { renderToString } = require('@vue/server-renderer');`);
     lines.push(
       `const context = module0.createStoreContext(count => module0.createStore(() => ({ count })), 'PackCounter');`,
       `const app = vue.createSSRApp({ setup() { const value = context.useStore(); return () => vue.h('span', String(value.count)); } });`,
@@ -84,7 +95,8 @@ const promised: Promise<number> = handled.load();
 `;
   for (const extension of ['mts', 'cts']) writeFileSync(join(temp, `types.${extension}`), source);
   execFileSync(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '--noEmit', '--strict', '--skipLibCheck', '--target', 'ES2022', '--module', 'NodeNext', '--moduleResolution', 'NodeNext', join(temp, 'types.mts'), join(temp, 'types.cts')], { stdio: 'pipe' });
-  console.log('Packed ESM/CJS entrypoints, subpaths, SSR runtime and NodeNext types passed.');
+  const testedVue = JSON.parse(readFileSync(join(modules, 'vue/package.json'), 'utf8')).version;
+  console.log(`Packed ESM/CJS entrypoints, subpaths, SSR runtime and NodeNext types passed (Vue ${testedVue}, Node ${process.version}).`);
 } catch (error) {
   if (error.stdout) process.stderr.write(error.stdout);
   if (error.stderr) process.stderr.write(error.stderr);

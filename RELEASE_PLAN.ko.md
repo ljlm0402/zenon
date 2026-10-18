@@ -27,5 +27,6 @@ SSR 헬퍼 자체는 추가 API이지만 전체 릴리스에는 저장 실패 �
 - publish workflow는 Git 태그 `v<version>`과 package.json 버전이 정확히 일치해야 진행한다.
 - prerelease 식별자가 있는 버전은 `next`, 정식 버전은 `latest`로 게시한다.
 - 현재 검증은 `npm run check`와 예제 타입 검사/빌드다. check에는 단위·회귀, 릴리스 채널, ESM/CJS·선언 빌드, 실제 tarball 소비자 검사가 포함된다.
+- PR 및 게시 workflow는 추가로 `ZENON_TEST_VUE_VERSION=3.2.0 npm run test:package`를 실행한다. 10월 18일 로컬에서 Vue 3.2.0·3.5.17 / Node 22.16.0의 패키지 소비자 검증을 통과했다. 전체 버전 범위 및 실제 앱 적용 검증은 10월 21–23일 후보 검증 항목으로 남긴다.
 - RC에서 정식 전환 시 이전 원본 백업과 마이그레이션 정책을 그대로 유지한다. npm 채널만 되돌려도 이미 변환한 사용자 데이터가 자동 복구되는 것은 아니다.
 - 태그 게시 workflow의 실제 npm 토큰·레지스트리 권한은 이번 PR CI와 별개다. 이번 작업에서 npm 게시를 시험하거나 실사용 데이터에 적용하지 않는다.
