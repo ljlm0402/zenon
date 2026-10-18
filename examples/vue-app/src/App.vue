@@ -7,4 +7,7 @@
 
 <script setup lang="ts">
 import Counter from "./components/Counter.vue";
+import { provideCounter } from "./stores/counter";
+
+provideCounter();
 </script>

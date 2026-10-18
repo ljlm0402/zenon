@@ -368,3 +368,26 @@ SSR에서는 요청마다 `createStore`를 호출하고 그 인스턴스를 해�
 이전 버전 변환은 검증과 원본 백업, 새 버전 저장이 모두 성공해야 메모리에 반영됩니다. 기본 백업 키 `<key>:zenon:backup`은 자동 덮어쓰기·삭제되지 않습니다. 다른 내용이 있으면 먼저 별도 보관하거나 `backupKey`를 변경하세요. `rehydrate`는 메모리 값을 덮어쓸 수 있으며 수동 구독 알림은 보내지 않습니다.
 
 구체적인 사용 예, 이전 방법, 데이터 보존 범위는 [미출시 변경 안내](./RELEASE_NOTES.ko.md)를 참고하세요.
+
+### SSR·컴포넌트 범위의 상태 공유
+
+```ts
+// counterContext.ts — 정의만 공유하고 실제 상태는 provider마다 생성합니다.
+import { createStore, createStoreContext } from "zenon";
+
+type Counter = { count: number; increment: () => void };
+export const counterContext = createStoreContext((initialCount: number) =>
+  createStore<Counter>((set, get) => ({
+    count: initialCount,
+    increment: () => set({ count: get().count + 1 }, "increment"),
+  })), "Counter"
+);
+```
+
+- SSR 앱 생성 함수: 요청마다 새 `createSSRApp`을 만들고 `counterContext.provideTo(app, initialCount)`로 등록합니다. 반환값으로 해당 요청의 스토어를 받습니다.
+- 부모 컴포넌트의 동기 setup: `const store = counterContext.provideStore(0)`로 하위 컴포넌트용 스토어를 생성합니다.
+- 하위 컴포넌트의 동기 setup: `const store = counterContext.useStore()`로 가장 가까운 provider를 사용합니다.
+
+factory 인자와 반환 타입은 그대로 추론됩니다. factory는 매번 새로운 스토어를 동기적으로 반환해야 합니다. 이미 만든 singleton을 반환하면 요청 격리를 보장할 수 없습니다. 같은 앱/컴포넌트에 같은 context를 두 번 등록하거나 provider 없이 사용하면 오류가 발생합니다. 서로 다른 context는 이름이 같아도 독립적입니다.
+
+컴포넌트 helper는 setup에서 await 전에 호출하세요. 자기 컴포넌트가 제공한 값은 provideStore의 반환값으로 사용하고, useStore는 조상 또는 앱의 provider를 읽습니다. 중첩 provider는 하위 트리에서만 기존 provider를 가립니다. SSR 앱 자체도 요청마다 새로 만들어야 합니다. 자동 HTML 직렬화·클라이언트 hydration은 포함하지 않습니다.

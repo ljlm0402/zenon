@@ -1,6 +1,6 @@
 # Zenon 전체 코드 검토 및 개선 보고서
 
-이 문서의 1–7절은 최초 검토 기록이며, 최신 수정 상태는 마지막 **9. 마이그레이션·복구 및 릴리스 준비**을 우선합니다.
+이 문서의 1–7절은 최초 검토 기록이며, 최신 수정 상태는 마지막 **10. SSR context 및 릴리스 준비**을 우선합니다.
 
 검토일: 2026-10-18 (Asia/Seoul). 대상: 로컬 zenon 1.2.0 소스, 테스트, Vue 예제, 패키지·빌드 설정, 배포 워크플로, 영문·한글 README. 외부 서비스 배포나 npm 게시를 수행하지 않았다.
 
@@ -146,3 +146,13 @@ Vue 3의 `reactive`와 `computed`를 기반으로 하는 TypeScript 상태 관�
 - 다음 기능은 SSR provider/composable 사용성 개선이며 클라이언트 hydration은 별도 설계로 남긴다.
 
 최신 로컬 결과: **98개 테스트 통과**, 소스 타입 검사·ESM/CJS 빌드·실제 tarball 소비자 실행과 타입 검사 통과. 예제 타입 검사·프로덕션 빌드 및 diff 공백 검사 통과.
+
+## 10. SSR context 및 릴리스 준비
+
+PR #10이 development에 병합된 것을 확인하고 후속 작업을 분리했다. createStoreContext는 provider별 새 스토어 생성과 타입이 유지되는 인자·반환값을 제공한다. 전역 context 정의에는 스토어를 보관하지 않는다. provideStore/useStore/provideTo로 컴포넌트·앱 단위 공유를 지원하고 중복 등록과 provider 누락을 오류로 알린다.
+
+동시 SSR 요청, 같은 트리의 공유, 중첩 provider, 이름이 같은 context의 독립성, factory 실패 후 재시도, 실제 컴포넌트의 반응형 공유와 재마운트를 검증한다. 실제 npm tarball 소비자에서도 ESM/CJS SSR 렌더링과 타입 해석을 확인한다. 자동 클라이언트 hydration·직렬화는 범위 밖이다.
+
+RC 태그가 latest로 게시될 수 있던 workflow는 버전 일치 검증 및 next/latest 분기로 보완했다. publish 스크립트의 정식/후보 채널, 불일치 버전, 잘못된 버전 및 CLI 출력을 별도 테스트한다. 패치·릴리스 목표 일정과 진입 조건은 RELEASE_PLAN.ko.md에 기록했다.
+
+최신 로컬 결과: 기능·회귀 테스트 110개와 릴리스 정책 테스트 4개 통과. 소스 타입 검사, ESM/CJS·선언 빌드, 실제 tarball SSR 소비자 실행과 타입 검사, 예제 타입 검사·프로덕션 빌드, diff 공백 검사 통과. 실제 npm 게시 및 태그 생성은 수행하지 않았다.

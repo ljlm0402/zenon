@@ -84,3 +84,9 @@ getStatus는 반응형 ref가 아닌 새 스냅샷이다. onReady는 인스턴�
 ## 출시 판단
 
 기본 데이터 보존 정책, 반환 타입 및 compose 계약에 호환성 변화가 있으므로 현재 1.x 사용자에게 무조건 호환되는 패치로 게시하지 않는다. 다음 메이저 릴리스 후보로 검토하고, 원격 CI와 리뷰가 끝난 뒤 별도로 버전과 게시를 결정한다.
+
+## SSR context 후속 추가
+
+`createStoreContext(factory, name)`은 타입이 유지되는 `provideStore`, `useStore`, `provideTo`를 제공한다. 같은 context 정의를 공유해도 provider마다 새 인스턴스를 생성하며, 중첩 provider와 앱 단위 등록을 지원한다. 같은 앱·컴포넌트에 중복 등록하거나 provider가 없으면 오류가 발생한다. factory는 새로운 스토어를 동기적으로 만들어야 하며, SSR에서는 앱도 요청별로 새로 생성한다. 예제 Counter는 독립 스토어 생성 함수 대신 root provider와 소비자 composable을 연결했다.
+
+publish workflow는 prerelease를 next로 분리하고 Git 태그/패키지 버전 불일치를 차단한다. 목표 일정은 RELEASE_PLAN.ko.md에 기록했으며 실제 게시·버전 변경은 아직 하지 않았다.

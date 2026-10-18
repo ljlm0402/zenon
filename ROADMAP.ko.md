@@ -31,11 +31,11 @@
 
 완료 기준: 이전 두 스키마, 버전 누락·미래 버전, 잘못된 값, 마이그레이션 예외, 저장 용량 부족을 테스트. 실패 시 원본 바이트가 유지되어야 한다.
 
-## 2단계 — SSR 사용성
+## 2단계 — SSR 사용성 (구현 완료, 후속 PR 검토 대상)
 
 대상 문제: 사용자가 매번 요청별 store와 provide/inject 연결을 직접 구현해야 한다.
 
-제안: 타입이 지정된 context factory와 provider/composable. 전역 상태가 아니라 주입 키만 공유한다. 누락된 provider는 명확한 오류로 알린다.
+구현: createStoreContext(factory, name)의 provideStore/useStore/provideTo. context는 상태 인스턴스를 전역 보관하지 않고 Vue provider에 전달한다. 누락·중복 provider와 setup 밖 호출은 명확한 오류로 알린다. 예제 Counter도 root provider를 사용한다.
 
 완료 기준: 동시 요청 격리, 같은 요청 내 공유, 중첩 provider, 다른 앱 인스턴스, provider 누락 테스트. 클라이언트 hydration은 별도 설계로 분리하고 HTML 직렬화 보안과 서버/클라이언트 초기값 일치를 검증한 뒤 추가한다.
 
@@ -65,3 +65,5 @@
 | 구독 효율 | 1/100/1000개 구독자와 관련 없는 상태 변경 측정 | 벤치마크 코드·환경·결과 공개 후 |
 
 기능 수를 늘리는 것보다 먼저 계약·회귀 테스트·복구 가능성을 제품의 강점으로 만든다.
+
+게시 단계와 목표 날짜는 [패치·릴리스 일정](./RELEASE_PLAN.ko.md)을 참고한다. 일정은 검토와 검증 통과를 전제로 한 제안이며 자동 게시 예약이 아니다.

@@ -34,11 +34,18 @@ try {
       `const migrated = module0.createStore(module1.withPersist('state', { storage, version: 2, migrate: old => ({ count: old.oldCount }), onReady: value => { controller = value; } })(() => ({ count: 0 })));`,
       `if (migrated.count !== 4 || !data.has('state:zenon:backup') || controller.getStatus().status !== 'ready') throw new Error('Packed migration failed');`
     );
+    lines.push(mode === 'mjs' ? `import * as vue from 'vue'; import { renderToString } from 'vue/server-renderer';` : `const vue = require('vue'); const { renderToString } = require('vue/server-renderer');`);
+    lines.push(
+      `const context = module0.createStoreContext(count => module0.createStore(() => ({ count })), 'PackCounter');`,
+      `const app = vue.createSSRApp({ setup() { const value = context.useStore(); return () => vue.h('span', String(value.count)); } });`,
+      `context.provideTo(app, 42);`,
+      `renderToString(app).then(html => { if (html !== '<span>42</span>') throw new Error('Packed SSR context failed'); }).catch(error => { console.error(error); process.exitCode = 1; });`
+    );
     const file = join(temp, `consumer.${mode}`);
     writeFileSync(file, lines.join('\n'));
     execFileSync(process.execPath, [file], { stdio: 'pipe' });
   }
-  const source = `import { createStore, compose, type Store } from 'zenon';
+  const source = `import { createStore, createStoreContext, compose, type Store, type StoreContext } from 'zenon';
 import { withPersist, withErrorBoundary, type PersistController, type PersistStatus } from 'zenon/plugins';
 import { compose as subpathCompose } from 'zenon/utils/compose';
 type State = { count: number; increment: () => void };
@@ -47,6 +54,13 @@ store.getState().count.toFixed();
 // @ts-expect-error invalid patch must be rejected
 store.setSilent({ count: 'bad' });
 subpathCompose<State>();
+const context = createStoreContext((count: number) => createStore(() => ({ count })), 'Counter');
+const count: number = context.useStore().count;
+// @ts-expect-error provider arguments retain the factory types
+context.provideStore('bad');
+// @ts-expect-error state fields retain their declared types
+context.useStore().count = 'bad';
+createStoreContext(() => createStore(() => ({count: 0}))).provideStore();
 withPersist<State>('migration', {
   version: 2,
   migrate: (old, version) => ({ count: Number(old.count) }),

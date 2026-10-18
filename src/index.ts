@@ -12,3 +12,5 @@ export type {
   ActionName,
 } from "./createStore";
 export { compose } from "./utils/compose";
+export { createStoreContext } from "./createStoreContext";
+export type { StoreContext } from "./createStoreContext";
